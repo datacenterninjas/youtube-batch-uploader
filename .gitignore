@@ -1,0 +1,19 @@
+# --- Sensitive API Credentials ---
+client_secrets.json
+token.pickle
+
+# --- Automation Video Folders ---
+videos_to_upload/
+uploaded_archive/
+failed_to_upload/
+
+# --- Dynamic Automated Logs ---
+success_logs.txt
+error_logs.txt
+
+# --- Python Environment & Cache ---
+__pycache__/
+*.pyc
+.env
+.venv
+venv/
