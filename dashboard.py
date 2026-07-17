@@ -5,6 +5,8 @@ import json
 import datetime
 from pathlib import Path
 import os
+import subprocess
+import sys
 
 QUOTA_FILE = "quota.json"
 MAX_DAILY_UPLOADS = 6
@@ -60,7 +62,7 @@ class DashboardApp:
     def __init__(self, root):
         self.root = root
         self.root.title("YouTube Auto-Uploader Dashboard")
-        self.root.geometry("400x350")
+        self.root.geometry("400x360")
         self.root.configure(bg="#f4f4f9")
         self.root.resizable(False, False)
         
@@ -68,15 +70,15 @@ class DashboardApp:
         self.title_font = font.Font(family="Helvetica", size=18, weight="bold")
         self.label_font = font.Font(family="Helvetica", size=12)
         
-        # Status Banner
-        self.status_label = tk.Label(self.root, text="Status: CHECKING...", font=self.title_font, bg="#f4f4f9")
+        # Status Banner (explicit dark gray text to prevent visibility issues on macOS)
+        self.status_label = tk.Label(self.root, text="Status: CHECKING...", font=self.title_font, bg="#f4f4f9", fg="#333333")
         self.status_label.pack(pady=(20, 10))
         
         # Metrics Frame
         self.metrics_frame = tk.Frame(self.root, bg="#f4f4f9")
         self.metrics_frame.pack(pady=10, padx=20, fill="x")
         
-        # Metric Labels
+        # Metric Labels (explicit dark gray text)
         self.quota_var = tk.StringVar(value="Today's Uploads: 0 / 6")
         self.queue_var = tk.StringVar(value="Videos Pending in Queue: 0")
         self.archived_var = tk.StringVar(value="Total Successfully Archived: 0")
@@ -87,9 +89,17 @@ class DashboardApp:
         self.create_metric_row(self.archived_var)
         self.create_metric_row(self.failed_var)
         
+        # Control Buttons Frame
+        self.btn_frame = tk.Frame(self.root, bg="#f4f4f9")
+        self.btn_frame.pack(pady=15)
+        
         # Refresh Button
-        self.refresh_btn = tk.Button(self.root, text="Refresh Now", font=self.label_font, command=self.update_dashboard, bg="#dcdcdc", relief="groove")
-        self.refresh_btn.pack(pady=20)
+        self.refresh_btn = tk.Button(self.btn_frame, text="Refresh Now", font=self.label_font, command=self.update_dashboard, bg="#dcdcdc", fg="#333333", relief="groove")
+        self.refresh_btn.pack(side="left", padx=10)
+        
+        # Start Uploader Button
+        self.start_btn = tk.Button(self.btn_frame, text="Start Uploader", font=self.label_font, command=self.start_uploader, bg="#dcdcdc", fg="#333333", relief="groove")
+        self.start_btn.pack(side="left", padx=10)
         
         # Update Job ID for cancellation
         self.update_job = None
@@ -98,15 +108,30 @@ class DashboardApp:
         self.update_dashboard()
         
     def create_metric_row(self, var):
-        lbl = tk.Label(self.metrics_frame, textvariable=var, font=self.label_font, bg="#f4f4f9", anchor="w")
+        lbl = tk.Label(self.metrics_frame, textvariable=var, font=self.label_font, bg="#f4f4f9", fg="#333333", anchor="w")
         lbl.pack(fill="x", pady=5)
         
+    def start_uploader(self):
+        # Determine the python executable to use (defaults to current virtual environment python)
+        python_exe = sys.executable
+        script_path = Path(__file__).parent / "uploader.py"
+        
+        try:
+            # Launch uploader as a background subprocess
+            subprocess.Popen([python_exe, str(script_path)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            # Instantly refresh status
+            self.update_dashboard()
+        except Exception as e:
+            print(f"Error starting uploader: {e}")
+            
     def update_dashboard(self):
-        # Update Status
+        # Update Status and Start Button state
         if is_uploader_running():
-            self.status_label.config(text="Status: RUNNING", fg="green")
+            self.status_label.config(text="Status: RUNNING", fg="#2e7d32")  # High contrast green
+            self.start_btn.config(state="disabled")
         else:
-            self.status_label.config(text="Status: STOPPED", fg="red")
+            self.status_label.config(text="Status: STOPPED", fg="#c62828")  # High contrast red
+            self.start_btn.config(state="normal")
             
         # Update Quota
         quota = get_today_quota()
@@ -133,3 +158,4 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = DashboardApp(root)
     root.mainloop()
+
