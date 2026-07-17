@@ -17,3 +17,10 @@ __pycache__/
 .env
 .venv
 venv/
+
+# --- System & Temp Files ---
+.DS_Store
+quota.json
+youtube_uploader.lock
+get-pip.py
+
