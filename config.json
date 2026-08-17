@@ -1,0 +1,11 @@
+{
+  "daily_upload_limit": 6,
+  "file_stability_seconds": 5,
+  "max_upload_retries": 5,
+  "approval_mode": "review",
+  "ai_enabled": true,
+  "transcription_enabled": true,
+  "thumbnail_analysis_enabled": true,
+  "generate_chapters": true,
+  "default_category": "Travel & Events"
+}

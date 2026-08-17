@@ -20,12 +20,17 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.errors import HttpError
 
+import database
+import analyzer
+import metadata_generator
+import thumbnail_analyzer
+import config
+
 # Define scopes and paths
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 CLIENT_SECRETS_FILE = "client_secrets.json"
 TOKEN_FILE = "token.pickle"
 QUOTA_FILE = "quota.json"
-MAX_DAILY_UPLOADS = 6
 
 lock_file_pointer = None
 
@@ -80,7 +85,6 @@ def authenticate():
     return build("youtube", "v3", credentials=creds)
 
 def load_quota():
-    """Reads the quota.json file and resets it if it's a new day."""
     today = datetime.date.today().isoformat()
     if os.path.exists(QUOTA_FILE):
         try:
@@ -93,18 +97,15 @@ def load_quota():
     return {"date": today, "count": 0}
 
 def save_quota(data):
-    """Writes the quota data back to quota.json."""
     with open(QUOTA_FILE, "w") as f:
         json.dump(data, f, indent=4)
 
 def increment_quota():
-    """Increments the successful upload count in quota.json."""
     data = load_quota()
     data["count"] += 1
     save_quota(data)
 
 def get_seconds_until_midnight():
-    """Calculates seconds until local midnight + 60s buffer."""
     now = datetime.datetime.now()
     tomorrow = now + datetime.timedelta(days=1)
     midnight = datetime.datetime(year=tomorrow.year, month=tomorrow.month, day=tomorrow.day, hour=0, minute=0, second=0)
@@ -124,32 +125,34 @@ def wait_for_file_to_stabilize(filepath):
         except OSError:
             time.sleep(5)
 
-def sanitize_title(title):
-    title = title.replace("<", "").replace(">", "").replace("_", " ")
-    return title[:95]
-
-def upload_video(youtube, filepath, title, privacy_status):
-    title = sanitize_title(title)
+def upload_video(youtube, filepath, video_row):
+    title = video_row.get("title") or Path(filepath).stem
+    description = video_row.get("description") or "Uploaded via YouTube Auto Publisher"
+    tags_str = video_row.get("tags") or "automated"
+    tags = [t.strip() for t in tags_str.split(",") if t.strip()]
+    privacy_status = (video_row.get("privacy") or "unlisted").lower()
+    
     body = {
         "snippet": {
-            "title": title,
-            "description": "Uploaded via Python Automation",
-            "tags": ["automated"],
+            "title": title[:95],
+            "description": description,
+            "tags": tags,
             "categoryId": "22"
         },
         "status": {
-            "privacyStatus": privacy_status.lower()
+            "privacyStatus": privacy_status
         }
     }
+    
     insert_request = youtube.videos().insert(
         part=",".join(body.keys()),
         body=body,
         media_body=MediaFileUpload(filepath, chunksize=-1, resumable=True)
     )
-    print(f"Starting upload for {title} ({privacy_status})...")
+    print(f"Starting YouTube upload for '{title}' ({privacy_status})...")
     
     retries = 0
-    max_retries = 5
+    max_retries = config.get_setting("max_upload_retries", 5)
     response = None
     
     while response is None:
@@ -157,20 +160,17 @@ def upload_video(youtube, filepath, title, privacy_status):
             _, response = insert_request.next_chunk()
         except (HttpError, ConnectionResetError, socket.timeout, httplib2.ServerNotFoundError) as e:
             if isinstance(e, HttpError) and e.resp.status == 403 and "quotaExceeded" in str(e):
-                raise e # Do not retry Quota Exhaustion
-            
+                raise e
             if retries >= max_retries:
-                raise e # Bubble up if max retries exceeded
-                
-            sleep_time = 5 * (2 ** retries) # 5, 10, 20, 40, 80...
-            print(f"Network error: {e}. Retrying in {sleep_time} seconds (Attempt {retries + 1}/{max_retries})...")
+                raise e
+            sleep_time = 5 * (2 ** retries)
+            print(f"Network error: {e}. Retrying in {sleep_time}s (Attempt {retries + 1}/{max_retries})...")
             time.sleep(sleep_time)
             retries += 1
             
     return response
 
 def scan_for_videos():
-    """Scans subfolders and returns an alphabetically sorted list of pending video files."""
     valid_folders = ["Public", "Private", "Unlisted"]
     video_extensions = ('.mp4', '.mov', '.mkv', '.avi')
     base_dir = Path("videos_to_upload")
@@ -187,19 +187,22 @@ def scan_for_videos():
             if file_path.is_file() and file_path.name.lower().endswith(video_extensions):
                 queue.append(file_path)
                 
-    # Sort alphabetically by filename
     queue.sort(key=lambda p: p.name)
     return queue
 
 def main_loop(youtube_client):
+    database.init_db()
+    
     while True:
+        cfg = config.load_config()
+        max_quota = cfg.get("daily_upload_limit", 6)
         quota_data = load_quota()
         count = quota_data.get("count", 0)
         
-        if count >= MAX_DAILY_UPLOADS:
+        if count >= max_quota:
             sleep_seconds = get_seconds_until_midnight()
             hours = sleep_seconds / 3600
-            print(f"Daily quota reached ({count}/{MAX_DAILY_UPLOADS}). Sleeping for {hours:.2f} hours until midnight...")
+            print(f"Daily quota reached ({count}/{max_quota}). Sleeping for {hours:.2f} hours until midnight...")
             time.sleep(sleep_seconds)
             continue
             
@@ -209,40 +212,109 @@ def main_loop(youtube_client):
             time.sleep(60)
             continue
             
-        # Process the first video in the queue
         file_path = queue[0]
         original_title = file_path.stem
         privacy_status = file_path.parent.name
         
-        print(f"Processing next video in queue: {file_path.name} ({count+1}/{MAX_DAILY_UPLOADS} for today)")
-        wait_for_file_to_stabilize(str(file_path))
+        # 1. Register Video
+        video_record, is_duplicate = database.register_video(file_path, privacy_status)
+        video_id = video_record['id']
+        current_status = video_record['status']
+        
+        if is_duplicate and current_status in ('UPLOADED', 'ARCHIVED', 'DUPLICATE'):
+            print(f"⚠️ Duplicate video hash detected: {video_record['file_hash']}. Archiving without upload.")
+            database.update_video_status(video_id, 'DUPLICATE', error_message="Duplicate file hash detected.")
+            shutil.move(str(file_path), os.path.join("uploaded_archive", file_path.name))
+            continue
+
+        approval_mode = cfg.get("approval_mode", "review")
+
+        # If already analyzed and awaiting approval, don't re-analyze
+        if current_status == "AWAITING_APPROVAL":
+            if approval_mode == "review":
+                print(f"⏳ Video #{video_id} ('{file_path.name}') is AWAITING_APPROVAL in Web Dashboard...")
+                time.sleep(15)
+                continue
+
+        # Run analysis pipeline only if video is newly discovered
+        if current_status in ("DISCOVERED", "STABILIZING"):
+            # 2. File Stabilization Check
+            database.update_video_status(video_id, 'STABILIZING')
+            wait_for_file_to_stabilize(str(file_path))
+            
+            # 3. Video Metadata & Frame Extraction (Sprint 3)
+            try:
+                analyzer.analyze_video(video_id, str(file_path))
+            except Exception as e:
+                print(f"⚠️ Analysis note: {e}")
+                
+            # 4. Generate Metadata (Sprint 4)
+            try:
+                metadata_generator.generate_metadata(video_id, file_path.name, privacy_status)
+            except Exception as e:
+                print(f"⚠️ Metadata note: {e}")
+                
+            # 5. Thumbnail Selection (Sprint 7)
+            try:
+                thumbnail_analyzer.select_best_thumbnails(video_id)
+            except Exception as e:
+                print(f"⚠️ Thumbnail note: {e}")
+
+            current_status = database.get_video_by_id(video_id)['status']
+
+        # Check Approval Mode (AUTO vs REVIEW)
+        if approval_mode == "review" and current_status not in ("READY_TO_UPLOAD", "UPLOADING"):
+            database.update_video_status(video_id, 'AWAITING_APPROVAL')
+            print(f"⏳ Video #{video_id} ('{file_path.name}') is AWAITING_APPROVAL in Web Dashboard...")
+            time.sleep(15)
+            continue
+
+        # 6. Upload
+        database.update_video_status(video_id, 'UPLOADING')
+        database.increment_upload_attempts(video_id)
+        current_attempt = (video_record.get('upload_attempts') or 0) + 1
+        
+        video_record = database.get_video_by_id(video_id)
         
         try:
-            upload_video(youtube_client, str(file_path), original_title, privacy_status)
+            response = upload_video(youtube_client, str(file_path), video_record)
+            yt_id = response.get("id") if response else None
+            yt_url = f"https://youtu.be/{yt_id}" if yt_id else None
+            
             increment_quota()
-            log_success(f"Successfully uploaded {original_title}. Moving to archive.")
+            log_success(f"Successfully uploaded {original_title} (YouTube ID: {yt_id}). Moving to archive.")
+            database.log_attempt(video_id, current_attempt, 'SUCCESS')
+            database.update_video_status(video_id, 'UPLOADED', youtube_video_id=yt_id, youtube_url=yt_url)
+            
             shutil.move(str(file_path), os.path.join("uploaded_archive", file_path.name))
+            database.update_video_status(video_id, 'ARCHIVED')
+            
         except HttpError as e:
             if e.resp.status == 403 and "quotaExceeded" in str(e):
                 err_msg = f"Quota exceeded (API limit) while uploading {original_title}."
                 log_error(err_msg)
                 print("[CRITICAL ALERT] YouTube API Quota Exceeded. Forcing script to sleep until tomorrow.")
-                # Mark quota as maxed out so the loop sleeps on the next iteration
+                database.log_attempt(video_id, current_attempt, 'FAILED', error=err_msg)
+                database.update_video_status(video_id, 'UPLOAD_FAILED', error_message=err_msg)
+                
                 quota_data = load_quota()
-                quota_data["count"] = MAX_DAILY_UPLOADS
+                quota_data["count"] = max_quota
                 save_quota(quota_data)
             else:
                 err_msg = f"HTTP Error {e.resp.status} during upload of {original_title}: {str(e)}"
                 log_error(err_msg)
+                database.log_attempt(video_id, current_attempt, 'FAILED', error=err_msg)
+                database.update_video_status(video_id, 'UPLOAD_FAILED', error_message=err_msg)
                 if os.path.exists(file_path):
                     shutil.move(str(file_path), os.path.join("failed_to_upload", file_path.name))
         except Exception as e:
             err_msg = f"Unexpected error during upload of {original_title}: {str(e)}"
             log_error(err_msg)
+            database.log_attempt(video_id, current_attempt, 'FAILED', error=err_msg)
+            database.update_video_status(video_id, 'UPLOAD_FAILED', error_message=err_msg)
             if os.path.exists(file_path):
                 shutil.move(str(file_path), os.path.join("failed_to_upload", file_path.name))
                 
-        # Small delay before grabbing the next file in the queue
         time.sleep(2)
 
 if __name__ == "__main__":
@@ -256,8 +328,8 @@ if __name__ == "__main__":
     youtube_client = authenticate()
     print("Authentication successful.")
     
-    print("Starting Batch Queue Processor...")
+    print("Starting YouTube Auto Publisher V2 Engine...")
     try:
         main_loop(youtube_client)
     except KeyboardInterrupt:
-        print("\nProcessor gracefully stopped by user.")
+        print("\nPublisher engine gracefully stopped by user.")
