@@ -171,23 +171,19 @@ def upload_video(youtube, filepath, video_row):
     return response
 
 def scan_for_videos():
-    valid_folders = ["Public", "Private", "Unlisted"]
-    video_extensions = ('.mp4', '.mov', '.mkv', '.avi')
+    """Scans videos_to_upload directory and all subfolders for any video files."""
+    video_extensions = ('.mp4', '.mov', '.mkv', '.avi', '.webm', '.m4v', '.flv', '.wmv', '.3gp', '.mpeg', '.mpg')
     base_dir = Path("videos_to_upload")
     queue = []
     
     if not base_dir.exists():
         return queue
         
-    for folder_name in valid_folders:
-        folder_path = base_dir / folder_name
-        if not folder_path.exists():
-            continue
-        for file_path in folder_path.iterdir():
-            if file_path.is_file() and file_path.name.lower().endswith(video_extensions):
-                queue.append(file_path)
+    for p in base_dir.rglob("*"):
+        if p.is_file() and p.name.lower().endswith(video_extensions) and not p.name.startswith("."):
+            queue.append(p)
                 
-    queue.sort(key=lambda p: p.name)
+    queue.sort(key=lambda item: item.name)
     return queue
 
 def main_loop(youtube_client):
@@ -214,7 +210,7 @@ def main_loop(youtube_client):
             
         file_path = queue[0]
         original_title = file_path.stem
-        privacy_status = file_path.parent.name
+        privacy_status = file_path.parent.name if file_path.parent.name in ("Public", "Private", "Unlisted") else "unlisted"
         
         # 1. Register Video
         video_record, is_duplicate = database.register_video(file_path, privacy_status)

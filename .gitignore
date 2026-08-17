@@ -24,3 +24,11 @@ quota.json
 youtube_uploader.lock
 get-pip.py
 
+# --- Local Secrets, Config & Database ---
+config.json
+youtube_publisher.db
+youtube_publisher.db-wal
+youtube_publisher.db-shm
+processing/
+
+

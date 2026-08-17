@@ -1,4 +1,7 @@
 import os
+import sys
+import shutil
+import subprocess
 from pathlib import Path
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -87,6 +90,25 @@ def index(request: Request):
         }
     )
 
+@app.post("/api/uploader/restart")
+def restart_uploader_engine():
+    """Kills existing uploader processes and starts a fresh uploader engine."""
+    for proc in psutil.process_iter(['name', 'cmdline']):
+        try:
+            cmd = proc.info.get('cmdline') or []
+            if any('uploader.py' in arg for arg in cmd) and proc.pid != os.getpid():
+                proc.kill()
+        except Exception:
+            pass
+
+    # Give lock file a moment to release
+    import time
+    time.sleep(1)
+
+    # Launch uploader engine in background
+    subprocess.Popen([sys.executable, "-u", "uploader.py"])
+    return RedirectResponse(url="/", status_code=303)
+
 @app.post("/api/videos/{video_id}/approve")
 def approve_video(video_id: int):
     database.update_video_status(video_id, "READY_TO_UPLOAD")
@@ -95,6 +117,43 @@ def approve_video(video_id: int):
 @app.post("/api/videos/{video_id}/reject")
 def reject_video(video_id: int):
     database.update_video_status(video_id, "REJECTED")
+    return RedirectResponse(url="/", status_code=303)
+
+@app.post("/api/videos/{video_id}/retry")
+def retry_video(video_id: int):
+    """Resets video status and restores video file to staging folder for re-processing."""
+    video = database.get_video_by_id(video_id)
+    if not video:
+        return RedirectResponse(url="/", status_code=303)
+        
+    file_path = Path(video["file_path"])
+    filename = video["filename"]
+    privacy = (video.get("privacy") or "unlisted").title()
+    if privacy not in ("Public", "Private", "Unlisted"):
+        privacy = "Unlisted"
+        
+    staging_target = Path(f"videos_to_upload/{privacy}/{filename}")
+    staging_target.parent.mkdir(parents=True, exist_ok=True)
+
+    # If file was moved to archive/failed, move it back to staging folder
+    if not file_path.exists():
+        archive_path = Path(f"uploaded_archive/{filename}")
+        failed_path = Path(f"failed_to_upload/{filename}")
+        if archive_path.exists():
+            shutil.move(str(archive_path), str(staging_target))
+        elif failed_path.exists():
+            shutil.move(str(failed_path), str(staging_target))
+
+    # Reset video DB record to DISCOVERED so engine re-analyzes & re-generates AI metadata
+    with database.get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE videos 
+            SET status = 'DISCOVERED', error_message = NULL, upload_attempts = 0, file_path = ?
+            WHERE id = ?
+        """, (str(staging_target), video_id))
+        conn.commit()
+
     return RedirectResponse(url="/", status_code=303)
 
 @app.post("/api/videos/{video_id}/update")

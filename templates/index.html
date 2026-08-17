@@ -14,6 +14,7 @@
             --accent-green: #4ade80;
             --accent-yellow: #facc15;
             --accent-red: #f87171;
+            --accent-purple: #c084fc;
             --border-color: #334155;
             --input-bg: #0f172a;
         }
@@ -35,11 +36,19 @@
             padding-bottom: 20px;
             border-bottom: 1px solid var(--border-color);
             margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
         }
 
         .header h1 {
             font-size: 1.6rem;
             margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-controls {
             display: flex;
             align-items: center;
             gap: 12px;
@@ -86,6 +95,7 @@
             margin-bottom: 20px;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
+            flex-wrap: wrap;
         }
 
         .tab-btn {
@@ -157,7 +167,7 @@
         .badge-AWAITING_APPROVAL { background: rgba(250, 204, 21, 0.95); color: #0f172a; }
         .badge-READY_TO_UPLOAD, .badge-UPLOADING { background: rgba(74, 222, 128, 0.95); color: #0f172a; }
         .badge-UPLOADED, .badge-ARCHIVED { background: #22c55e; color: #ffffff; }
-        .badge-REJECTED, .badge-UPLOAD_FAILED { background: #ef4444; color: #ffffff; }
+        .badge-REJECTED, .badge-UPLOAD_FAILED, .badge-DUPLICATE { background: #ef4444; color: #ffffff; }
 
         .card-body {
             padding: 16px;
@@ -246,6 +256,7 @@
             margin-top: auto;
             padding-top: 12px;
             border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
         }
 
         .btn {
@@ -265,13 +276,22 @@
         .btn-approve { background-color: var(--accent-green); color: #0f172a; }
         .btn-reject { background-color: var(--accent-red); color: #ffffff; }
         .btn-save { background-color: var(--accent-blue); color: #0f172a; }
+        .btn-retry { background-color: var(--accent-purple); color: #0f172a; }
+        .btn-restart { background-color: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>🎬 YouTube Auto Publisher V2</h1>
-        <div class="status-badge {% if uploader_running %}status-running{% else %}status-stopped{% endif %}">
-            Uploader Engine: {% if uploader_running %}RUNNING{% else %}STOPPED{% endif %}
+        <div class="header-controls">
+            <div class="status-badge {% if uploader_running %}status-running{% else %}status-stopped{% endif %}">
+                Engine: {% if uploader_running %}RUNNING{% else %}STOPPED{% endif %}
+            </div>
+
+            <!-- Restart Engine Button -->
+            <form action="/api/uploader/restart" method="POST" style="margin: 0;">
+                <button type="submit" class="btn btn-restart">🔄 Restart Engine</button>
+            </form>
         </div>
     </div>
 
@@ -364,6 +384,11 @@
                     </form>
                     <form action="/api/videos/{{ video.id }}/reject" method="POST" style="flex:1;">
                         <button type="submit" class="btn btn-reject" style="width: 100%;">Reject</button>
+                    </form>
+                    {% elif video.status in ['REJECTED', 'UPLOAD_FAILED', 'DUPLICATE'] %}
+                    <!-- Retry Button -->
+                    <form action="/api/videos/{{ video.id }}/retry" method="POST" style="flex:1;">
+                        <button type="submit" class="btn btn-retry" style="width: 100%;">🔄 Retry & Re-Analyze AI</button>
                     </form>
                     {% elif video.youtube_url %}
                     <a href="{{ video.youtube_url }}" target="_blank" class="btn btn-approve">Watch on YouTube ↗</a>

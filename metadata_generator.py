@@ -21,8 +21,8 @@ def clean_title(raw_title):
 
 def generate_metadata_with_vision(video_id, frames):
     """Uses Gemini Vision AI to generate metadata from video keyframes."""
-    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-    if not api_key or not GENAI_AVAILABLE or not frames:
+    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or config.get_setting("gemini_api_key")
+    if not api_key or api_key == "YOUR_API_KEY_HERE" or not GENAI_AVAILABLE or not frames:
         return None
         
     try:
@@ -50,7 +50,7 @@ def generate_metadata_with_vision(video_id, frames):
         )
 
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.6-flash',
             contents=[*images, prompt]
         )
         
