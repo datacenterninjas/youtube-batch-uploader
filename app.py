@@ -240,6 +240,30 @@ def approve_all_pending_videos():
         
     return RedirectResponse(url="/", status_code=303)
 
+@app.get("/api/videos/{video_id}/stream")
+def stream_video(video_id: int):
+    """Streams the staged video file for the in-browser video player modal."""
+    from fastapi.responses import FileResponse
+    video = database.get_video_by_id(video_id)
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found")
+    file_path = Path(video["file_path"])
+    if not file_path.exists():
+        candidates = [
+            Path(os.path.expanduser(config.get_setting("return_directory", "~/Downloads"))) / file_path.name,
+            Path("videos_to_upload/Unlisted") / file_path.name,
+            Path("videos_to_upload/Public") / file_path.name,
+            Path("videos_to_upload/Private") / file_path.name,
+            Path("uploaded_archive") / file_path.name
+        ]
+        for c in candidates:
+            if c.exists():
+                file_path = c
+                break
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Video file not found on disk")
+    return FileResponse(str(file_path), media_type="video/mp4")
+
 @app.post("/api/videos/merge")
 def merge_selected_videos(
     video_ids: list[int] = Form(...),

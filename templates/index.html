@@ -3,213 +3,444 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Auto Publisher V2</title>
+    <title>YouTube Auto Publisher Studio</title>
+    <!-- Modern Google Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-color: #f8fafc;
+            --bg-base: #060911;
+            --bg-card: rgba(18, 26, 43, 0.75);
+            --bg-card-hover: rgba(28, 39, 64, 0.85);
+            --bg-input: rgba(8, 12, 22, 0.8);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-focus: #38bdf8;
+            --text-primary: #f8fafc;
             --text-muted: #94a3b8;
             --accent-blue: #38bdf8;
-            --accent-green: #4ade80;
+            --accent-cyan: #06b6d4;
+            --accent-green: #22c55e;
             --accent-yellow: #facc15;
-            --accent-red: #f87171;
             --accent-purple: #c084fc;
-            --border-color: #334155;
-            --input-bg: #0f172a;
+            --accent-red: #f87171;
+            --glow-blue: 0 0 20px rgba(56, 189, 248, 0.25);
+            --glow-green: 0 0 20px rgba(34, 197, 94, 0.25);
         }
 
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 24px;
-            padding-bottom: 120px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-base);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(192, 132, 252, 0.06) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            padding: 24px 32px 100px 32px;
+            min-height: 100vh;
         }
 
-        .header {
+        h1, h2, h3, .brand-title {
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: -0.02em;
+        }
+
+        /* Top Navigation Header */
+        .top-nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-subtle);
             margin-bottom: 24px;
             flex-wrap: wrap;
             gap: 16px;
         }
 
-        .header h1 {
-            font-size: 1.6rem;
-            margin: 0;
+        .brand-box {
             display: flex;
             align-items: center;
-            gap: 12px;
-        }
-
-        .header-controls {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .status-badge {
-            padding: 6px 16px;
-            border-radius: 9999px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-        .status-running { background: rgba(74, 222, 128, 0.15); color: var(--accent-green); border: 1px solid var(--accent-green); }
-        .status-stopped { background: rgba(248, 113, 113, 0.15); color: var(--accent-red); border: 1px solid var(--accent-red); }
-
-        /* Upload & Staging Panel */
-        .upload-panel {
-            background-color: var(--card-bg);
-            border: 2px dashed var(--accent-blue);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 24px;
-        }
-
-        .upload-panel h3 { margin: 0 0 6px 0; font-size: 1.15rem; color: var(--accent-blue); }
-        .upload-panel p { margin: 0 0 16px 0; font-size: 0.85rem; color: var(--text-muted); }
-
-        .upload-form-flex {
-            display: flex;
             gap: 14px;
-            align-items: center;
-            flex-wrap: wrap;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .stat-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 16px 20px;
-        }
-
-        .stat-card .label {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-bottom: 6px;
-        }
-
-        .stat-card .value {
-            font-size: 1.6rem;
-            font-weight: bold;
-        }
-
-        /* Filter Tabs */
-        .filter-tabs {
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #ef4444, #f97316);
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35);
         }
 
-        .tab-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 0.95rem;
+        .brand-title {
+            font-size: 1.65rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 40%, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .heartbeat-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
             font-weight: 600;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: var(--accent-green);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
+            animation: pulse 1.8s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        .btn-nav {
             padding: 8px 16px;
-            border-radius: 6px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             cursor: pointer;
             transition: all 0.2s;
         }
+        .btn-nav:hover {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
 
-        .tab-btn:hover { background-color: rgba(255, 255, 255, 0.05); color: var(--text-color); }
-        .tab-btn.active { background-color: var(--accent-blue); color: #0f172a; }
+        /* Studio KPI & Quota Gauge Bar */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 240px 1fr 1fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 1100px) {
+            .stats-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+        }
 
-        /* Video Card Grid */
+        .stat-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        .quota-card {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 16px;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(34, 197, 94, 0.1));
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        /* Global Active Upload Tracker */
+        #global-upload-bar {
+            display: none;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(34, 197, 94, 0.15));
+            border: 1px solid var(--accent-blue);
+            box-shadow: var(--glow-blue);
+            border-radius: 12px;
+            padding: 14px 20px;
+            margin-bottom: 24px;
+        }
+
+        .progress-track {
+            background: rgba(0, 0, 0, 0.5);
+            height: 10px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 8px;
+            position: relative;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #38bdf8, #22c55e);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 12px #22c55e;
+        }
+
+        /* Interactive Staging Drop Zone */
+        .staging-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px dashed rgba(56, 189, 248, 0.35);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            transition: all 0.2s ease;
+        }
+        .staging-card:hover, .staging-card.dragover {
+            border-color: var(--accent-blue);
+            background: rgba(56, 189, 248, 0.04);
+            box-shadow: var(--glow-blue);
+        }
+
+        .staging-body {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .drop-target {
+            flex: 1.2;
+            min-width: 280px;
+            text-align: center;
+            padding: 18px;
+            cursor: pointer;
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: var(--bg-input);
+            transition: border-color 0.2s;
+        }
+        .drop-target:hover { border-color: var(--accent-blue); }
+
+        /* Toolbar: Search, Filters, Sort, View Toggle */
+        .toolbar-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 10px 16px;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .tab-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+        .tab-btn.active {
+            background: var(--accent-blue);
+            color: #060911;
+            font-weight: 800;
+            box-shadow: 0 2px 10px rgba(56, 189, 248, 0.35);
+        }
+
+        .tool-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.84rem;
+            width: 220px;
+            outline: none;
+            transition: border-color 0.2s, width 0.2s;
+        }
+        .search-input:focus { border-color: var(--accent-blue); width: 260px; }
+
+        .select-input {
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            outline: none;
+        }
+
+        .view-btn {
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .view-btn.active { background: rgba(56, 189, 248, 0.15); border-color: var(--accent-blue); color: var(--accent-blue); }
+
+        /* Video Cards Grid */
         .video-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(370px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
             gap: 20px;
         }
 
         .video-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             position: relative;
-            transition: border-color 0.3s, box-shadow 0.3s;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+        }
+        .video-card:hover {
+            border-color: rgba(255, 255, 255, 0.16);
+            transform: translateY(-2px);
         }
 
-        .card-checkbox {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            z-index: 10;
-            background: rgba(15, 23, 42, 0.9);
-            padding: 6px 12px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            border: 1px solid var(--accent-blue);
-            color: var(--accent-blue);
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-
-        .thumb-container {
+        /* Top Thumbnail Area with Play Button Overlay */
+        .thumb-preview-wrap {
+            position: relative;
             width: 100%;
             height: 210px;
-            background-color: #0f172a;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: #000;
             overflow: hidden;
+            cursor: pointer;
         }
-
-        .thumb-container img {
+        .thumb-preview-wrap img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.3s;
         }
+        .thumb-preview-wrap:hover img { transform: scale(1.03); }
 
-        .no-thumb {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .badge-status {
+        .play-overlay-icon {
             position: absolute;
-            top: 12px;
-            right: 12px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 48px;
+            height: 48px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #fff;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .thumb-preview-wrap:hover .play-overlay-icon { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+
+        .status-badge-top {
+            position: absolute;
+            top: 10px;
+            left: 10px;
             padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            backdrop-filter: blur(8px);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .badge-ready { background: rgba(34, 197, 94, 0.85); color: #000; }
+        .badge-awaiting { background: rgba(250, 204, 21, 0.9); color: #000; }
+        .badge-uploading { background: rgba(56, 189, 248, 0.9); color: #000; }
+        .badge-uploaded { background: rgba(34, 197, 94, 0.9); color: #000; }
+        .badge-failed { background: rgba(248, 113, 113, 0.9); color: #000; }
+        .badge-rejected { background: rgba(148, 163, 184, 0.8); color: #000; }
+
+        .select-cb-pill {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            padding: 4px 8px;
             border-radius: 6px;
             font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
         }
-        .badge-DISCOVERED, .badge-STABILIZING { background: #334155; color: #cbd5e1; }
-        .badge-ANALYZED, .badge-METADATA_READY { background: rgba(56, 189, 248, 0.9); color: #0f172a; }
-        .badge-AWAITING_APPROVAL { background: rgba(250, 204, 21, 0.95); color: #0f172a; }
-        .badge-READY_TO_UPLOAD, .badge-UPLOADING { background: rgba(74, 222, 128, 0.95); color: #0f172a; }
-        .badge-UPLOADED, .badge-ARCHIVED { background: #22c55e; color: #ffffff; }
-        .badge-REJECTED, .badge-UPLOAD_FAILED, .badge-DUPLICATE { background: #ef4444; color: #ffffff; }
 
+        /* Card Content & Segmented Tabs */
         .card-body {
             padding: 16px;
             display: flex;
@@ -218,1261 +449,1077 @@
             flex: 1;
         }
 
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin: 0;
-            line-height: 1.3;
-        }
-
-        .meta-pills {
+        .card-header-info {
             display: flex;
+            justify-content: space-between;
+            align-items: baseline;
             gap: 8px;
-            flex-wrap: wrap;
-            font-size: 0.8rem;
-            color: var(--text-muted);
         }
-
-        .pill {
-            background-color: var(--input-bg);
-            padding: 3px 8px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
+        .video-filename {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 250px;
         }
-
-        /* Frame Strip */
-        .frame-strip {
-            display: flex;
-            gap: 6px;
-            overflow-x: auto;
-            padding: 6px 0;
-        }
-
-        .frame-strip img {
-            width: 70px;
-            height: 40px;
-            object-fit: cover;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-        }
-
-        .frame-strip img:hover { opacity: 1; border-color: var(--accent-blue); }
-
-        /* Form Controls */
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .form-group label {
-            font-size: 0.8rem;
+        .video-id-tag {
+            font-size: 0.72rem;
             color: var(--text-muted);
             font-weight: 600;
         }
 
-        .context-box {
-            background: rgba(56, 189, 248, 0.06);
-            border: 1px dashed var(--accent-blue);
-            border-radius: 8px;
-            padding: 12px;
+        /* Segmented Inspector Sub-Tabs */
+        .subtabs-bar {
             display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .context-box label {
-            font-size: 0.82rem;
-            color: var(--accent-blue);
-            font-weight: 700;
-        }
-
-        .ai-progress-box {
-            background: rgba(192, 132, 252, 0.15);
-            border: 1px solid var(--accent-purple);
+            background: var(--bg-input);
+            padding: 3px;
             border-radius: 8px;
-            padding: 10px;
-            margin-top: 4px;
+            border: 1px solid var(--border-subtle);
+            gap: 2px;
+        }
+        .subtab-btn {
+            flex: 1;
+            padding: 5px 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
             text-align: center;
         }
-
-        .ai-progress-bar {
-            width: 100%;
-            height: 6px;
-            background: #0f172a;
-            border-radius: 999px;
-            overflow: hidden;
-            margin-bottom: 6px;
+        .subtab-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
         }
 
-        .ai-progress-fill {
-            height: 100%;
-            width: 30%;
-            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue));
-            animation: pulseProgress 1.5s infinite ease-in-out;
+        .tab-panel {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .tab-panel.active { display: flex; }
+
+        /* Tools Grid Layout */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
         }
 
-        @keyframes pulseProgress {
-            0% { width: 15%; margin-left: 0; }
-            50% { width: 60%; margin-left: 20%; }
-            100% { width: 15%; margin-left: 85%; }
-        }
-
-        .ai-status-text {
-            font-size: 0.8rem;
+        .btn-tool {
+            padding: 7px 10px;
+            border-radius: 8px;
+            font-size: 0.76rem;
             font-weight: 700;
-            color: var(--accent-purple);
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .btn-tool:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--border-focus);
+        }
+
+        .form-label {
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 2px;
         }
 
         .form-input, .form-textarea, .form-select {
-            background-color: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-color);
-            padding: 8px;
-            font-size: 0.85rem;
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            color: var(--text-primary);
+            padding: 8px 12px;
+            font-size: 0.84rem;
             font-family: inherit;
-        }
-
-        .form-input:focus, .form-textarea:focus, .form-select:focus {
             outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            border-color: var(--border-focus);
+        }
+        .form-textarea { resize: vertical; height: 60px; }
+
+        /* Keyframe Candidate Scroller */
+        .frame-strip {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 4px 0;
+        }
+        .frame-strip img {
+            height: 48px;
+            width: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            flex-shrink: 0;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .frame-strip img:hover {
             border-color: var(--accent-blue);
+            transform: scale(1.05);
         }
 
-        .form-textarea { resize: vertical; min-height: 55px; }
-
-        .card-actions {
+        /* Action Buttons */
+        .card-actions-row {
             display: flex;
             gap: 8px;
             margin-top: auto;
-            padding-top: 12px;
-            border-top: 1px solid var(--border-color);
-            flex-wrap: wrap;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-subtle);
         }
 
-        .btn {
-            padding: 8px 12px;
-            border-radius: 6px;
+        .btn-action-upload {
+            flex: 1.2;
+            padding: 10px 14px;
+            border-radius: 8px;
             font-size: 0.85rem;
-            font-weight: 700;
-            cursor: pointer;
+            font-weight: 800;
+            background: linear-gradient(135deg, #38bdf8, #22c55e);
+            color: #000;
             border: none;
-            text-align: center;
-            text-decoration: none;
-            transition: opacity 0.2s;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
+            transition: opacity 0.2s, transform 0.2s;
         }
+        .btn-action-upload:hover { opacity: 0.95; transform: translateY(-1px); }
 
-        .btn:hover { opacity: 0.9; }
-        .btn-approve { background-color: var(--accent-green); color: #0f172a; }
-        .btn-reject { background-color: var(--accent-red); color: #ffffff; }
-        .btn-save { background-color: var(--accent-blue); color: #0f172a; }
-        .btn-retry { background-color: var(--accent-purple); color: #0f172a; }
-        .btn-restart { background-color: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); }
+        .btn-action-secondary {
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-action-secondary:hover { color: var(--accent-red); border-color: var(--accent-red); }
 
-        /* Floating Merge Toolbar */
-        .merge-bar {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(12px);
-            border: 2px solid var(--accent-blue);
-            box-shadow: 0 12px 30px rgba(0,0,0,0.7);
-            padding: 12px 24px;
-            border-radius: 9999px;
+        /* Compact Table View Mode */
+        #table-view-container {
             display: none;
-            align-items: center;
-            gap: 16px;
-            z-index: 1000;
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            overflow-x: auto;
         }
 
-        /* Merge Progress Modal */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.84rem;
+        }
+        .data-table th {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 12px 16px;
+            color: var(--text-muted);
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            vertical-align: middle;
+        }
+        .data-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+        /* Modals & Overlays */
         .modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(8px);
-            z-index: 2000;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(12px);
             align-items: center;
             justify-content: center;
+            z-index: 9999;
+            padding: 20px;
         }
-
-        .modal-content {
-            background: var(--card-bg);
-            border: 1px solid var(--accent-blue);
+        .modal-box {
+            background: #0d1322;
+            border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 16px;
-            padding: 32px;
-            width: 90%;
-            max-width: 480px;
-            text-align: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-        }
-
-        .progress-bar-container {
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
             width: 100%;
-            height: 12px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        /* Floating Merge / Discard Bar */
+        .floating-merge-bar {
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
             background: #0f172a;
-            border-radius: 999px;
-            overflow: hidden;
-            margin: 20px 0 12px 0;
-            border: 1px solid var(--border-color);
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
-            transition: width 0.3s ease;
-        }
-
-        .activity-bar {
-            background: rgba(30, 41, 59, 0.7);
-            border: 1px solid var(--border-color);
-            backdrop-filter: blur(8px);
-            border-radius: 12px;
-            padding: 14px 20px;
-            margin-bottom: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-        }
-
-        .activity-bar.active {
-            border-color: var(--accent-purple);
-            background: rgba(192, 132, 252, 0.08);
-            box-shadow: 0 0 20px rgba(192, 132, 252, 0.25);
-        }
-
-        .activity-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .activity-icon {
-            font-size: 1.1rem;
-            animation: pulseIcon 2s infinite ease-in-out;
-        }
-
-        @keyframes pulseIcon {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-        }
-
-        .activity-text {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: var(--text-color);
-        }
-
-        .activity-progress-track {
-            width: 100%;
-            height: 6px;
-            background: #0f172a;
-            border-radius: 999px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
-
-        .activity-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue));
-            transition: width 0.4s ease;
-        }
-
-        .uploaded-banner {
-            background: rgba(34, 197, 94, 0.12);
-            border: 1px solid #22c55e;
-            border-radius: 10px;
-            padding: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 8px;
-        }
-
-        .upload-live-box {
-            background: rgba(56, 189, 248, 0.12);
             border: 1px solid var(--accent-blue);
-            border-radius: 10px;
-            padding: 14px;
-            margin-bottom: 10px;
-            animation: glowUpload 2s infinite ease-in-out;
-        }
-
-        @keyframes glowUpload {
-            0%, 100% { box-shadow: 0 0 10px rgba(56, 189, 248, 0.2); }
-            50% { box-shadow: 0 0 25px rgba(56, 189, 248, 0.5); }
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), var(--glow-blue);
+            border-radius: 30px;
+            padding: 10px 24px;
+            align-items: center;
+            gap: 16px;
+            z-index: 1000;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🎬 YouTube Auto Publisher V2</h1>
-        <div class="header-controls">
-            <a href="/settings" class="btn btn-restart" style="text-decoration: none; padding: 6px 14px; font-size: 0.85rem;">⚙️ Settings & Channels</a>
-            <div class="status-badge {% if uploader_running %}status-running{% else %}status-stopped{% endif %}">
-                Engine: {% if uploader_running %}RUNNING{% else %}STOPPED{% endif %}
+
+    <!-- Top Navigation Header -->
+    <header class="top-nav">
+        <div class="brand-box">
+            <div class="brand-icon">🎬</div>
+            <div>
+                <div class="brand-title">YouTube Auto Publisher</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">Creator Studio & Automated Publishing Suite</div>
+            </div>
+        </div>
+
+        <div class="nav-actions">
+            <!-- Engine Live Pulse Badge -->
+            <div class="heartbeat-badge">
+                <div class="pulse-dot"></div>
+                <span id="engine-status-text">Engine Active</span>
             </div>
 
-            <!-- Restart Engine Button -->
-            <form action="/api/uploader/restart" method="POST" style="margin: 0;">
-                <button type="submit" class="btn btn-restart">🔄 Restart Engine</button>
-            </form>
+            <a href="/settings" class="btn-nav">
+                ⚙️ Settings & Channels
+            </a>
+        </div>
+    </header>
+
+    <!-- Studio KPI & Quota Gauge Bar -->
+    <div class="stats-grid">
+        <!-- SVG Circular Quota Ring -->
+        <div class="stat-card quota-card">
+            <div style="position: relative; width: 60px; height: 60px; flex-shrink: 0;">
+                <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
+                    <path stroke="rgba(255,255,255,0.1)" stroke-width="3.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                    <path stroke="var(--accent-green)" stroke-dasharray="{{ (quota_count / 6.0 * 100)|round }}, 100" stroke-width="3.5" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                </svg>
+                <div style="position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-family:'Outfit'; font-weight:800; font-size:0.88rem; color:#fff;">
+                    {{ quota_count }}/6
+                </div>
+            </div>
+            <div>
+                <div class="stat-label">Daily Upload Quota</div>
+                <div style="font-size: 0.8rem; color: var(--accent-green); font-weight: 600;">
+                    {{ 6 - quota_count }} slots remaining
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">Total in Studio</div>
+            <div class="stat-value">{{ total_videos }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">Awaiting Approval</div>
+            <div class="stat-value" style="color: var(--accent-yellow);">{{ awaiting_count }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">Ready to Upload</div>
+            <div class="stat-value" style="color: var(--accent-blue);">{{ ready_count }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">Published to YouTube</div>
+            <div class="stat-value" style="color: var(--accent-green);">{{ uploaded_count }}</div>
         </div>
     </div>
 
-    <!-- Live Task Activity Title Bar -->
-    <div id="activity-title-bar" class="activity-bar">
-        <div class="activity-header">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span id="activity-icon" class="activity-icon">🟢</span>
-                <span id="activity-label" class="activity-text">System Idle — All background processes ready</span>
+    <!-- Global Upload Progress Notification -->
+    <div id="global-upload-bar">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-weight: 700; font-size: 0.95rem; color: var(--accent-blue); display:flex; align-items:center; gap:8px;">
+                <span class="pulse-dot"></span> <span id="global-upload-msg">🚀 Uploading video to YouTube...</span>
             </div>
-            <div id="activity-time" style="font-size: 0.8rem; color: var(--accent-blue); font-weight: 600;">Engine Active</div>
+            <div id="global-upload-pct" style="font-weight: 800; font-size: 1.1rem; color: var(--accent-green);">0%</div>
         </div>
-        <div id="activity-progress-container" class="activity-progress-track" style="display: none;">
-            <div id="activity-progress-bar" class="activity-progress-fill" style="width: 0%;"></div>
+        <div class="progress-track">
+            <div id="global-progress-fill" class="progress-fill"></div>
         </div>
     </div>
 
-    <!-- Upload & Stage Panel -->
-    <div class="upload-panel">
-        <form id="stage-upload-form" onsubmit="handleStageUpload(event)">
-            <h3>📥 Stage New Videos for AI Analysis</h3>
-            <p>Select video files from your computer. Each video will be staged with its visual preview thumbnail on the dashboard below.</p>
-            
-            <div class="upload-form-flex">
-                <input type="file" id="stage-file-input" name="files" multiple accept="video/*" class="form-input" style="flex: 3; min-width: 250px;" required>
-                <button type="submit" class="btn btn-save" style="padding: 10px 24px; font-size: 0.9rem;">
-                    🚀 Stage Videos Now
-                </button>
+    <!-- Staging Upload & Context Drop Area -->
+    <div class="staging-card" id="staging-drop-zone">
+        <form id="stage-upload-form" enctype="multipart/form-data" onsubmit="handleStageUpload(event)">
+            <div class="staging-body">
+                <div class="drop-target" onclick="document.getElementById('file-picker').click()">
+                    <input type="file" id="file-picker" name="files" multiple accept="video/*" style="display: none;" onchange="handleFileSelect(this)">
+                    <div style="font-size: 2rem; margin-bottom: 4px;">📥</div>
+                    <div style="font-weight: 700; font-size: 0.92rem;" id="drop-label">Drop Video Files Here or Browse</div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">MP4, MOV, MKV, WebM (M4 GPU Accelerated)</div>
+                </div>
+
+                <div style="flex: 1.5; min-width: 280px; display: flex; flex-direction: column; gap: 8px;">
+                    <label class="form-label">✨ Optional Creator Notes for Vision AI:</label>
+                    <textarea name="user_context" class="form-textarea" placeholder="E.g. Shot at Bangalore MG Road, arcade games, drone footage, highlights..." style="height: 60px; font-size: 0.82rem;"></textarea>
+                    <button type="submit" id="btn-stage-submit" class="btn-action-upload" style="align-self: flex-start; padding: 8px 24px; font-size: 0.85rem;">
+                        ⚡ Stage & Auto-Analyze Video(s)
+                    </button>
+                </div>
             </div>
         </form>
     </div>
 
-    <!-- Stage Upload Progress Modal -->
-    <div id="stage-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 style="margin: 0; color: var(--accent-blue); font-size: 1.3rem;">📥 Staging Video Files</h3>
-            <p id="stage-status-msg" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 8px;">Uploading files from your computer...</p>
-            <div class="progress-bar-container">
-                <div id="stage-progress-fill" class="progress-bar-fill"></div>
-            </div>
-            <div id="stage-pct" style="font-weight: bold; font-size: 1.1rem; color: var(--accent-green); margin-top: 6px;">0%</div>
-            <div id="stage-detail-msg" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Preparing upload...</div>
-        </div>
-    </div>
-
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="label">Today's Uploads</div>
-            <div class="value">{{ quota_count }} / 6</div>
-        </div>
-        <div class="stat-card">
-            <div class="label">Total Videos in Database</div>
-            <div class="value">{{ total_videos }}</div>
-        </div>
-        <div class="stat-card">
-            <div class="label">Approval Mode</div>
-            <div class="value" style="text-transform: uppercase;">{{ approval_mode }}</div>
-        </div>
-    </div>
-
-    <!-- Filter Tabs & Batch Approval Bar -->
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
-        <div class="filter-tabs" style="margin-bottom: 0;">
+    <!-- Toolbar: Search, Filters, Sort & View Modes -->
+    <div class="toolbar-bar">
+        <div class="filter-tabs">
             <button class="tab-btn active" onclick="filterCategory('ALL')">All ({{ total_videos }})</button>
             <button class="tab-btn" onclick="filterCategory('AWAITING_APPROVAL')">Awaiting Approval ({{ awaiting_count }})</button>
-            <button class="tab-btn" onclick="filterCategory('READY_TO_UPLOAD')">Ready to Upload ({{ ready_count }})</button>
+            <button class="tab-btn" onclick="filterCategory('READY_TO_UPLOAD')">Ready ({{ ready_count }})</button>
             <button class="tab-btn" onclick="filterCategory('UPLOADING')">🚀 Uploading ({{ uploading_count }})</button>
             <button class="tab-btn" onclick="filterCategory('UPLOADED')">✅ Uploaded ({{ uploaded_count }})</button>
             <button class="tab-btn" onclick="filterCategory('UPLOAD_FAILED')">⚠️ Failed ({{ failed_count }})</button>
             <button class="tab-btn" onclick="filterCategory('REJECTED')">Rejected ({{ rejected_count }})</button>
         </div>
 
-        {% if awaiting_count > 0 %}
-        <form action="/api/videos/approve_all" method="POST" onsubmit="return confirm('⚡ Approve and automatically upload all {{ awaiting_count }} staged video(s) completely hands-off?');">
-            <button type="submit" class="btn btn-approve" style="padding: 10px 20px; font-weight: 800; font-size: 0.88rem; background: linear-gradient(135deg, #38bdf8, #22c55e); box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);">
-                ⚡ Approve & Auto-Publish All ({{ awaiting_count }})
-            </button>
-        </form>
-        {% endif %}
-    </div>
+        <div class="tool-controls">
+            <input type="text" id="live-search" class="search-input" placeholder="🔍 Search title or file..." oninput="filterVideosLive()">
+            
+            <select id="sort-select" class="select-input" onchange="sortVideosLive()">
+                <option value="newest">Sort: Newest First</option>
+                <option value="oldest">Sort: Oldest First</option>
+                <option value="title">Sort: Title A-Z</option>
+            </select>
 
-    <!-- Video Cards Grid -->
-    <div class="video-grid">
-        {% for video in videos %}
-        <div class="video-card" id="card-{{ video.id }}" data-status="{{ video.status }}">
-            {% if video.status not in ['UPLOADED', 'ARCHIVED', 'UPLOADING'] %}
-            <!-- Selection Checkbox for Merging Staged Files -->
-            <label class="card-checkbox" title="Check 2 or more staged videos to merge together">
-                <input type="checkbox" class="video-select-cb" value="{{ video.id }}" onchange="updateMergeBar()">
-                ☑️ Select to Merge
-            </label>
+            <select id="privacy-filter" class="select-input" onchange="filterVideosLive()">
+                <option value="all">Privacy: All</option>
+                <option value="public">Public 🌐</option>
+                <option value="unlisted">Unlisted 🔗</option>
+                <option value="private">Private 🔒</option>
+            </select>
+
+            {% if awaiting_count > 0 %}
+            <form action="/api/videos/approve_all" method="POST" onsubmit="return confirm('⚡ Approve and auto-publish all {{ awaiting_count }} staged video(s) completely hands-off?');">
+                <button type="submit" class="btn-action-upload" style="padding: 6px 14px; font-size: 0.8rem;">
+                    ⚡ Approve All ({{ awaiting_count }})
+                </button>
+            </form>
             {% endif %}
 
-            <!-- Instant Visual Preview Thumbnail (Local OpenCV, No AI needed) -->
-            <div class="thumb-container">
-                {% if video.thumbnail_url %}
-                <img id="main-thumb-{{ video.id }}" src="{{ video.thumbnail_url }}" alt="Thumbnail">
+            <!-- View Switcher -->
+            <button type="button" id="btn-view-grid" class="view-btn active" onclick="switchView('grid')" title="Visual Grid View">🎛️</button>
+            <button type="button" id="btn-view-table" class="view-btn" onclick="switchView('table')" title="Compact Table View">📋</button>
+        </div>
+    </div>
+
+    <!-- Visual Video Cards Grid (Default Mode) -->
+    <div id="grid-view-container" class="video-grid">
+        {% for video in videos %}
+        <div class="video-card" id="card-{{ video.id }}" data-status="{{ video.status }}" data-title="{{ (video.title or video.filename)|lower }}" data-privacy="{{ (video.privacy or 'unlisted')|lower }}" data-id="{{ video.id }}">
+            
+            <!-- Top Thumbnail Preview -->
+            <div class="thumb-preview-wrap" onclick="openVideoPlayer({{ video.id }}, '{{ video.title or video.filename }}')">
+                <img id="main-thumb-{{ video.id }}" src="{{ video.thumbnail_url or '' }}" alt="Thumbnail">
+                <div class="play-overlay-icon">▶</div>
+
+                <!-- Status Badge -->
+                {% if video.status == 'READY_TO_UPLOAD' %}
+                <span class="status-badge-top badge-ready">Ready to Upload</span>
+                {% elif video.status == 'UPLOADED' %}
+                <span class="status-badge-top badge-uploaded">✅ Published</span>
+                {% elif video.status == 'UPLOADING' %}
+                <span class="status-badge-top badge-uploading">🚀 Uploading</span>
+                {% elif video.status == 'UPLOAD_FAILED' %}
+                <span class="status-badge-top badge-failed">⚠️ Failed</span>
+                {% elif video.status == 'REJECTED' %}
+                <span class="status-badge-top badge-rejected">Rejected</span>
                 {% else %}
-                <div class="no-thumb">📷 Extracting Preview...</div>
+                <span class="status-badge-top badge-awaiting">Awaiting Review</span>
                 {% endif %}
-                <div class="badge-status badge-{{ video.status }}" id="badge-{{ video.id }}">
-                    {% if video.status in ['UPLOADED', 'ARCHIVED'] %}✅ UPLOADED{% elif video.status == 'UPLOADING' %}🚀 UPLOADING{% else %}{{ video.status }}{% endif %}
-                </div>
+
+                {% if video.status not in ['UPLOADED', 'ARCHIVED', 'UPLOADING'] %}
+                <label class="select-cb-pill" onclick="event.stopPropagation();">
+                    <input type="checkbox" class="video-select-cb" value="{{ video.id }}" onchange="updateMergeBar()">
+                    <span>Select</span>
+                </label>
+                {% endif %}
             </div>
 
             <div class="card-body">
-                <h3 class="card-title" id="title-display-{{ video.id }}">{{ video.title or video.filename }}</h3>
-
-                <div class="meta-pills">
-                    <span class="pill">📁 {{ video.privacy|upper }}</span>
-                    {% if video.duration %}<span class="pill">⏱ {{ video.duration }}s</span>{% endif %}
-                    {% if video.resolution %}<span class="pill">📐 {{ video.resolution }}</span>{% endif %}
-                    <span class="pill" id="ai-pill-{{ video.id }}">🤖 AI: {% if video.ai_confidence %}{{ (video.ai_confidence * 100)|round|int }}%{% else %}Ready{% endif %}</span>
+                <div class="card-header-info">
+                    <div class="video-filename" title="{{ video.filename }}">{{ video.filename }}</div>
+                    <div class="video-id-tag">#{{ video.id }}</div>
                 </div>
 
                 {% if video.status in ['UPLOADED', 'ARCHIVED'] %}
-                <!-- Dedicated Clean Uploaded View -->
-                <div class="uploaded-banner">
-                    <div>
-                        <div style="font-size: 1.05rem; font-weight: 800; color: #22c55e; display: flex; align-items: center; gap: 6px;">
-                            <span>✅</span> Published to YouTube
-                        </div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
-                            {% if video.uploaded_at %}Published on: {{ video.uploaded_at }}{% else %}Upload Complete{% endif %}
-                        </div>
-                    </div>
+                <!-- Uploaded State Banner -->
+                <div style="background: rgba(34, 197, 94, 0.12); border: 1px solid var(--accent-green); padding: 14px; border-radius: 10px; text-align: center;">
+                    <div style="font-weight: 800; color: var(--accent-green); font-size: 0.95rem;">✅ Successfully Published!</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">YouTube ID: <strong>{{ video.youtube_video_id }}</strong></div>
                     {% if video.youtube_url %}
-                    <a href="{{ video.youtube_url }}" target="_blank" class="btn btn-approve" style="text-decoration: none; padding: 8px 16px; font-weight: 700; font-size: 0.88rem;">
-                        ▶ Watch Video ↗
-                    </a>
-                    {% elif video.youtube_video_id %}
-                    <a href="https://youtu.be/{{ video.youtube_video_id }}" target="_blank" class="btn btn-approve" style="text-decoration: none; padding: 8px 16px; font-weight: 700; font-size: 0.88rem;">
-                        ▶ Watch Video ↗
+                    <a href="{{ video.youtube_url }}" target="_blank" class="btn-action-upload" style="display:inline-block; margin-top:10px; padding: 8px 18px; text-decoration:none; font-size:0.82rem;">
+                        ▶ Watch on YouTube ↗
                     </a>
                     {% endif %}
-                </div>
-
-                <div style="background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 0.82rem; display: flex; flex-direction: column; gap: 6px;">
-                    <div><strong>Title:</strong> {{ video.title or video.filename }}</div>
-                    {% if video.youtube_video_id %}
-                    <div><strong>YouTube ID:</strong> <code style="color: var(--accent-blue);">{{ video.youtube_video_id }}</code></div>
-                    {% endif %}
-                    <div><strong>Privacy:</strong> <span class="pill" style="padding: 2px 6px;">{{ video.privacy|upper }}</span></div>
-                    {% if video.description %}
-                    <div style="color: var(--text-muted); max-height: 60px; overflow-y: auto; line-height: 1.3;">{{ video.description }}</div>
-                    {% endif %}
-                </div>
-
-                {% elif video.status == 'UPLOADING' %}
-                <!-- Dedicated Live Upload Progress View -->
-                <div id="upload-box-{{ video.id }}" class="upload-live-box">
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; font-weight: 700; color: var(--accent-blue); margin-bottom: 8px;">
-                        <span>🚀 Uploading to YouTube...</span>
-                        <span id="upload-pct-{{ video.id }}" style="color: var(--accent-green); font-size: 1rem;">Uploading...</span>
-                    </div>
-                    <div class="progress-bar-container" style="margin: 0; height: 10px;">
-                        <div id="upload-fill-{{ video.id }}" class="progress-bar-fill" style="width: 50%;"></div>
-                    </div>
-                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; text-align: center;">
-                        Streaming chunks to YouTube servers via OAuth API...
-                    </div>
                 </div>
 
                 {% else %}
 
-                <!-- Extracted Frame Preview Strip & Thumbnail Customizer -->
-                <div class="form-group">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                        <label style="margin: 0;">Keyframe Candidates:</label>
-                        <button type="button" class="btn btn-save" onclick="openThumbnailStudio({{ video.id }}, '{{ video.thumbnail_url or '' }}')" style="padding: 4px 10px; font-size: 0.76rem; background: linear-gradient(135deg, #a855f7, #6366f1);">
-                            🎨 Custom Thumbnail Studio
+                <!-- Segmented Inspector Sub-Tabs -->
+                <div class="subtabs-bar">
+                    <button type="button" class="subtab-btn active" onclick="switchCardTab({{ video.id }}, 'meta')">📝 Metadata</button>
+                    <button type="button" class="subtab-btn" onclick="switchCardTab({{ video.id }}, 'studio')">⚡ Studio FX</button>
+                    <button type="button" class="subtab-btn" onclick="switchCardTab({{ video.id }}, 'growth')">🌍 SEO & Growth</button>
+                </div>
+
+                <!-- Tab 1: Metadata & AI Prompt -->
+                <div id="panel-meta-{{ video.id }}" class="tab-panel active">
+                    <form id="meta-form-{{ video.id }}" action="/api/videos/{{ video.id }}/update" method="POST" style="display: flex; flex-direction: column; gap: 8px;">
+                        <div>
+                            <div class="form-label">Title:</div>
+                            <input type="text" id="input-title-{{ video.id }}" name="title" class="form-input" value="{{ video.title or '' }}">
+                        </div>
+                        <div>
+                            <div class="form-label">Description (with Chapters):</div>
+                            <textarea id="input-desc-{{ video.id }}" name="description" class="form-textarea">{{ video.description or '' }}</textarea>
+                        </div>
+                        <div>
+                            <div class="form-label">Tags:</div>
+                            <input type="text" id="input-tags-{{ video.id }}" name="tags" class="form-input" value="{{ video.tags or '' }}">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <div>
+                                <div class="form-label">Privacy:</div>
+                                <select name="privacy" class="form-select">
+                                    <option value="public" {% if (video.privacy|lower) == 'public' %}selected{% endif %}>Public 🌐</option>
+                                    <option value="unlisted" {% if (video.privacy|lower) == 'unlisted' %}selected{% endif %}>Unlisted 🔗</option>
+                                    <option value="private" {% if (video.privacy|lower) == 'private' %}selected{% endif %}>Private 🔒</option>
+                                </select>
+                            </div>
+                            <div>
+                                <div class="form-label">Category:</div>
+                                <input type="text" name="category" class="form-input" value="{{ video.category or 'Travel & Events' }}">
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                            <button type="button" class="btn-tool" onclick="triggerVisionAI({{ video.id }})" style="background: linear-gradient(135deg, rgba(192, 132, 252, 0.2), rgba(56, 189, 248, 0.2)); border-color: var(--accent-purple);">
+                                ✨ Vision AI Rewrite
+                            </button>
+                            <button type="submit" class="btn-tool" style="background: rgba(34, 197, 94, 0.15); border-color: var(--accent-green); color: var(--accent-green);">
+                                💾 Save Edits
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tab 2: Studio FX & Video Transformations -->
+                <div id="panel-studio-{{ video.id }}" class="tab-panel">
+                    <div class="form-label">Apple Silicon M4 Fast Tools:</div>
+                    <div class="tools-grid">
+                        <button type="button" class="btn-tool" onclick="convertToShorts({{ video.id }})">
+                            📱 9:16 Shorts
+                        </button>
+                        <button type="button" class="btn-tool" onclick="burnKineticCaptions({{ video.id }})" style="background: linear-gradient(135deg, rgba(234, 179, 8, 0.2), rgba(202, 138, 4, 0.2)); color: #facc15;">
+                            ⚡ Kinetic Text
+                        </button>
+                        <button type="button" class="btn-tool" onclick="openColorGradeStudio({{ video.id }})">
+                            🎨 Color LUTs
+                        </button>
+                        <button type="button" class="btn-tool" onclick="openAudioStudio({{ video.id }})" style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(2, 132, 199, 0.2));">
+                            🎵 Audio Mixer
+                        </button>
+                        <button type="button" class="btn-tool" onclick="openThumbnailStudio({{ video.id }}, '{{ video.thumbnail_url or '' }}')" style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(99, 102, 241, 0.2));">
+                            🎨 Thumb Studio
+                        </button>
+                        <button type="button" class="btn-tool" onclick="addEndScreenBumper({{ video.id }})">
+                            🎬 End Screen
                         </button>
                     </div>
+
                     {% if video.frames %}
+                    <div class="form-label" style="margin-top: 4px;">Candidate Keyframes:</div>
                     <div class="frame-strip">
                         {% for frame_path in video.frames %}
-                        <img src="{{ frame_path }}" onclick="document.getElementById('main-thumb-{{ video.id }}').src='{{ frame_path }}'" title="Click to preview">
+                        <img src="{{ frame_path }}" onclick="document.getElementById('main-thumb-{{ video.id }}').src='{{ frame_path }}'" title="Click to set preview">
                         {% endfor %}
                     </div>
                     {% endif %}
                 </div>
 
-                <!-- Video Optimization Power Suite Tools -->
-                <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px;">
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <button type="button" class="btn btn-retry" onclick="convertToShorts({{ video.id }})" style="flex: 1; min-width: 85px; padding: 5px 8px; font-size: 0.74rem; background: #334155;">
-                            📱 9:16 Shorts
+                <!-- Tab 3: SEO & Growth Tools -->
+                <div id="panel-growth-{{ video.id }}" class="tab-panel">
+                    <div class="form-label">Growth & Reach Optimization:</div>
+                    <div class="tools-grid">
+                        <button type="button" class="btn-tool" onclick="openKeywordSpy({{ video.id }}, '{{ video.title or video.category or '' }}')">
+                            🕵️ Competitor SEO
                         </button>
-                        <button type="button" class="btn btn-retry" onclick="burnKineticCaptions({{ video.id }})" style="flex: 1; min-width: 105px; padding: 5px 8px; font-size: 0.74rem; background: linear-gradient(135deg, #eab308, #ca8a04); color: #000; font-weight: 700;">
-                            ⚡ Kinetic Text
+                        <button type="button" class="btn-tool" onclick="generateMultilingual({{ video.id }})">
+                            🌍 5 Languages
                         </button>
-                        <button type="button" class="btn btn-retry" onclick="openColorGradeStudio({{ video.id }})" style="flex: 1; min-width: 90px; padding: 5px 8px; font-size: 0.74rem; background: #334155;">
-                            🎨 Color LUT
+                        <button type="button" class="btn-tool" onclick="openCommunityStudio({{ video.id }})">
+                            🖼️ Teaser GIF & Poll
                         </button>
-                        <button type="button" class="btn btn-retry" onclick="openAudioStudio({{ video.id }})" style="flex: 1; min-width: 90px; padding: 5px 8px; font-size: 0.74rem; background: linear-gradient(135deg, #0ea5e9, #0284c7);">
-                            🎵 Audio
-                        </button>
-                    </div>
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <button type="button" class="btn btn-retry" onclick="openKeywordSpy({{ video.id }}, '{{ video.title or video.category or '' }}')" style="flex: 1; min-width: 90px; padding: 5px 8px; font-size: 0.74rem; background: #334155;">
-                            🕵️ SEO Spy
-                        </button>
-                        <button type="button" class="btn btn-retry" onclick="generateMultilingual({{ video.id }})" style="flex: 1; min-width: 95px; padding: 5px 8px; font-size: 0.74rem; background: #334155;">
-                            🌍 Multi-Lang
-                        </button>
-                        <button type="button" class="btn btn-retry" onclick="addEndScreenBumper({{ video.id }})" style="flex: 1; min-width: 90px; padding: 5px 8px; font-size: 0.74rem; background: #334155;">
-                            🎬 End Screen
-                        </button>
-                        <button type="button" class="btn btn-retry" onclick="openCommunityStudio({{ video.id }})" style="flex: 1; min-width: 95px; padding: 5px 8px; font-size: 0.74rem; background: #334155;">
-                            🖼️ Teaser GIF
-                        </button>
-                        <button type="button" class="btn btn-retry" onclick="generateCaptions({{ video.id }})" style="flex: 0.8; min-width: 80px; padding: 5px 8px; font-size: 0.74rem; background: #334155;">
-                            🎙️ Subtitles
+                        <button type="button" class="btn-tool" onclick="generateCaptions({{ video.id }})">
+                            🎙️ Subtitles (.SRT)
                         </button>
                     </div>
                 </div>
 
-                <!-- Creator Context Box & Vision AI Trigger -->
-                <div class="context-box">
-                    <label>✨ Creator Context for AI (Optional Notes):</label>
-                    <textarea id="context-input-{{ video.id }}" name="user_context" class="form-textarea" placeholder="Add plain-text notes (e.g. where it was shot, highlights, details)..." style="font-size: 0.82rem; height: 50px;">{{ video.user_context or '' }}</textarea>
-                    
-                    <button type="button" id="ai-btn-{{ video.id }}" class="btn btn-retry" onclick="triggerVisionAI({{ video.id }})" style="margin-top: 2px; font-size: 0.82rem; padding: 8px;">
-                        ✨ Generate Title & Description with Vision AI
-                    </button>
-
-                    <!-- Live Vision AI Progress Bar -->
-                    <div id="ai-progress-{{ video.id }}" class="ai-progress-box" style="display: none;">
-                        <div class="ai-progress-bar"><div class="ai-progress-fill"></div></div>
-                        <div id="ai-status-text-{{ video.id }}" class="ai-status-text">🤖 Vision AI: Inspecting keyframe images...</div>
-                    </div>
-                </div>
-
-                <!-- Inline Metadata Form -->
-                <form id="meta-form-{{ video.id }}" action="/api/videos/{{ video.id }}/update" method="POST" style="display: flex; flex-direction: column; gap: 8px;">
-                    <div class="form-group">
-                        <label>Title:</label>
-                        <input type="text" id="input-title-{{ video.id }}" name="title" class="form-input" value="{{ video.title or '' }}">
-                    </div>
-                    <div class="form-group">
-                        <label>Description:</label>
-                        <textarea id="input-desc-{{ video.id }}" name="description" class="form-textarea">{{ video.description or '' }}</textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Tags:</label>
-                        <input type="text" id="input-tags-{{ video.id }}" name="tags" class="form-input" value="{{ video.tags or '' }}">
-                    </div>
-
-                    <!-- Privacy Selector Dropdown -->
-                    <div class="form-group">
-                        <label>YouTube Privacy Setting:</label>
-                        <select name="privacy" class="form-select">
-                            <option value="public" {% if (video.privacy|lower) == 'public' %}selected{% endif %}>Public 🌐</option>
-                            <option value="unlisted" {% if (video.privacy|lower) == 'unlisted' %}selected{% endif %}>Unlisted 🔗</option>
-                            <option value="private" {% if (video.privacy|lower) == 'private' %}selected{% endif %}>Private 🔒</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Category:</label>
-                        <input type="text" id="input-cat-{{ video.id }}" name="category" class="form-input" value="{{ video.category or 'Travel & Events' }}">
-                    </div>
-
-                    <button type="submit" class="btn btn-save" style="margin-top: 4px;">Save Edits</button>
-                </form>
-
-                {% if video.error_message %}
-                <div style="background: rgba(248, 113, 113, 0.15); border: 1px solid var(--accent-red); color: var(--accent-red); padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; line-height: 1.3;">
-                    ⚠️ <strong>Error:</strong> {{ video.error_message }}
-                </div>
-                {% endif %}
-
-                <!-- Actions -->
-                <div class="card-actions">
+                <!-- Action Buttons Bottom Row -->
+                <div class="card-actions-row">
                     {% if video.status == 'READY_TO_UPLOAD' %}
-                    <form action="/api/videos/{{ video.id }}/reupload" method="POST" style="flex:1;">
-                        <button type="submit" class="btn btn-approve" style="width: 100%; font-weight: 700; background: linear-gradient(135deg, #38bdf8, #22c55e); box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);">
+                    <form action="/api/videos/{{ video.id }}/reupload" method="POST" style="flex:1.2;">
+                        <button type="submit" class="btn-action-upload" style="width: 100%;">
                             🚀 Upload to YouTube Now
                         </button>
                     </form>
-                    <form action="/api/videos/{{ video.id }}/reject" method="POST" style="flex:0.8;">
-                        <button type="submit" class="btn btn-reject" style="width: 100%;">Reject & Move</button>
-                    </form>
-                    <form action="/api/videos/{{ video.id }}/discard" method="POST" onsubmit="return confirm('Discard and delete this video from the queue?');" style="flex:0.6;">
-                        <button type="submit" class="btn btn-reject" style="width: 100%; background: #475569; border-color: #64748b;">🗑️ Discard</button>
-                    </form>
-                    {% elif video.status in ['ANALYZED', 'METADATA_READY', 'AWAITING_APPROVAL', 'DISCOVERED', 'STABILIZING'] %}
-                    <form action="/api/videos/{{ video.id }}/approve" method="POST" style="flex:1;">
-                        <button type="submit" class="btn btn-approve" style="width: 100%;">Approve & Queue for Upload</button>
-                    </form>
-                    <form action="/api/videos/{{ video.id }}/reject" method="POST" style="flex:0.8;">
-                        <button type="submit" class="btn btn-reject" style="width: 100%;">Reject & Move</button>
-                    </form>
-                    <form action="/api/videos/{{ video.id }}/discard" method="POST" onsubmit="return confirm('Discard and delete this video from the queue?');" style="flex:0.6;">
-                        <button type="submit" class="btn btn-reject" style="width: 100%; background: #475569; border-color: #64748b;">🗑️ Discard</button>
-                    </form>
-                    {% elif video.status == 'UPLOAD_FAILED' %}
-                    <form action="/api/videos/{{ video.id }}/reupload" method="POST" style="flex:1;">
-                        <button type="submit" class="btn btn-approve" style="width: 100%;">🚀 Re-Do Upload Now</button>
-                    </form>
-                    <form action="/api/videos/{{ video.id }}/retry" method="POST" style="flex:0.8;">
-                        <button type="submit" class="btn btn-retry" style="width: 100%;">🔄 Re-Analyze AI</button>
-                    </form>
-                    <form action="/api/videos/{{ video.id }}/discard" method="POST" onsubmit="return confirm('Discard and delete this video from the queue?');" style="flex:0.6;">
-                        <button type="submit" class="btn btn-reject" style="width: 100%; background: #475569; border-color: #64748b;">🗑️ Discard</button>
-                    </form>
-                    {% elif video.status in ['REJECTED', 'DUPLICATE'] %}
-                    <form action="/api/videos/{{ video.id }}/retry" method="POST" style="flex:1;">
-                        <button type="submit" class="btn btn-retry" style="width: 100%;">🔄 Retry & Re-Analyze AI</button>
-                    </form>
-                    <form action="/api/videos/{{ video.id }}/discard" method="POST" onsubmit="return confirm('Discard and delete this video from the queue?');" style="flex:0.6;">
-                        <button type="submit" class="btn btn-reject" style="width: 100%; background: #475569; border-color: #64748b;">🗑️ Discard</button>
+                    {% else %}
+                    <form action="/api/videos/{{ video.id }}/approve" method="POST" style="flex:1.2;">
+                        <button type="submit" class="btn-action-upload" style="width: 100%;">
+                            🚀 Approve & Auto-Publish
+                        </button>
                     </form>
                     {% endif %}
+
+                    <button type="button" class="btn-action-secondary" onclick="discardSingleVideo({{ video.id }})" title="Discard file">
+                        🗑️ Discard
+                    </button>
                 </div>
+
                 {% endif %}
             </div>
         </div>
         {% endfor %}
     </div>
 
-    <!-- Floating Batch Merge & Discard Bar -->
-    <div id="merge-bar" class="merge-bar">
-        <span id="merge-count" style="font-weight: 700; color: var(--accent-blue);">0 Staged Videos Selected</span>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <button type="button" class="btn btn-save" onclick="startMergeProcess()" style="padding: 10px 20px; font-size: 0.88rem;">
-                🎬 Merge Selected Videos
-            </button>
-            <button type="button" class="btn btn-reject" onclick="discardSelectedVideos()" style="padding: 10px 18px; font-size: 0.88rem; background: #dc2626; border-color: #b91c1c;">
-                🗑️ Discard Selected
-            </button>
-        </div>
+    <!-- High-Density Compact Table View Mode -->
+    <div id="table-view-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 40px;">Select</th>
+                    <th style="width: 90px;">Preview</th>
+                    <th>Video Title & File</th>
+                    <th>Status</th>
+                    <th>Privacy</th>
+                    <th>Category</th>
+                    <th style="text-align: right;">Quick Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for video in videos %}
+                <tr id="row-{{ video.id }}" data-status="{{ video.status }}" data-title="{{ (video.title or video.filename)|lower }}" data-privacy="{{ (video.privacy or 'unlisted')|lower }}">
+                    <td>
+                        {% if video.status not in ['UPLOADED', 'ARCHIVED', 'UPLOADING'] %}
+                        <input type="checkbox" class="video-select-cb" value="{{ video.id }}" onchange="updateMergeBar()">
+                        {% endif %}
+                    </td>
+                    <td>
+                        <img src="{{ video.thumbnail_url or '' }}" style="width: 80px; height: 48px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="openVideoPlayer({{ video.id }}, '{{ video.title or video.filename }}')">
+                    </td>
+                    <td>
+                        <div style="font-weight: 700; color: var(--text-primary);">{{ video.title or video.filename }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ video.filename }} • #{{ video.id }}</div>
+                    </td>
+                    <td>
+                        <span class="status-badge-top badge-{{ (video.status|lower).replace('_', '-') }}" style="position: static; display: inline-block;">
+                            {{ video.status }}
+                        </span>
+                    </td>
+                    <td>{{ video.privacy or 'Unlisted' }}</td>
+                    <td>{{ video.category or 'Travel & Events' }}</td>
+                    <td style="text-align: right;">
+                        <button type="button" class="btn-tool" onclick="openVideoPlayer({{ video.id }}, '{{ video.title or video.filename }}')" style="display: inline-flex; padding: 4px 8px;">▶ Play</button>
+                        {% if video.status != 'UPLOADED' %}
+                        <form action="/api/videos/{{ video.id }}/reupload" method="POST" style="display: inline;">
+                            <button type="submit" class="btn-action-upload" style="padding: 4px 10px; font-size: 0.76rem;">🚀 Upload</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
-    <!-- Merge Progress Modal -->
-    <div id="merge-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 style="margin: 0; color: var(--accent-blue); font-size: 1.3rem;">🎬 Merging Selected Videos</h3>
-            <p id="merge-status-msg" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 8px;">Combining video streams...</p>
-            <div class="progress-bar-container">
-                <div id="progress-fill" class="progress-bar-fill"></div>
+    <!-- Floating Batch Merge / Discard Bar -->
+    <div id="merge-bar" class="floating-merge-bar">
+        <span id="merge-count" style="font-weight: 800; font-size: 0.9rem; color: var(--accent-blue);">0 clips selected</span>
+        <button type="button" class="btn-action-upload" onclick="openMergeModal()" style="padding: 6px 16px; font-size: 0.82rem;">
+            🎬 Merge Selected (GPU)
+        </button>
+        <button type="button" class="btn-action-secondary" onclick="discardSelectedVideos()" style="padding: 6px 14px; font-size: 0.82rem; color: var(--accent-red); border-color: var(--accent-red);">
+            🗑️ Discard Selected
+        </button>
+    </div>
+
+    <!-- In-Browser Video Player Modal -->
+    <div id="video-player-modal" class="modal-overlay" onclick="closeVideoPlayer()">
+        <div class="modal-box" style="max-width: 800px; padding: 16px;" onclick="event.stopPropagation();">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 id="player-title" style="margin: 0; font-size: 1.1rem; color: var(--accent-blue);">🎬 Video Preview</h3>
+                <button type="button" onclick="closeVideoPlayer()" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">✕</button>
             </div>
-            <div id="merge-pct" style="font-weight: bold; font-size: 1.1rem; color: var(--accent-green);">0%</div>
+            <video id="studio-video-player" controls autoplay style="width: 100%; border-radius: 8px; background: #000; max-height: 480px;"></video>
         </div>
     </div>
 
     <!-- Custom Thumbnail Studio Modal -->
     <div id="thumb-studio-modal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 650px; text-align: left;">
+        <div class="modal-box" style="max-width: 650px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <h3 style="margin: 0; color: var(--accent-purple); font-size: 1.3rem;">🎨 AI Thumbnail Studio</h3>
                 <button type="button" onclick="closeThumbnailStudio()" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">✕</button>
             </div>
-
-            <!-- Live Thumbnail Preview Canvas -->
-            <div style="text-align: center; background: #030712; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); margin-bottom: 12px;">
-                <img id="studio-preview-img" src="" style="max-height: 220px; width: auto; object-fit: contain; border-radius: 4px;">
+            <div style="text-align: center; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-subtle); margin-bottom: 12px;">
+                <img id="studio-preview-img" src="" style="max-height: 220px; width: auto; object-fit: contain;">
             </div>
-
-            <!-- Keyframe Candidates Selection -->
-            <label style="font-size: 0.84rem; font-weight: 700; color: var(--text-muted);">1. Select Base Keyframe Candidate:</label>
-            <div id="studio-candidates-grid" style="display: flex; gap: 8px; overflow-x: auto; padding: 6px 0 12px 0;">
-            </div>
-
-            <!-- Text Overlay Inputs -->
-            <label style="font-size: 0.84rem; font-weight: 700; color: var(--text-muted);">2. Viral Text Banner Overlays (Optional):</label>
+            <div class="form-label">1. Select Candidate Keyframe:</div>
+            <div id="studio-candidates-grid" style="display: flex; gap: 8px; overflow-x: auto; padding: 6px 0 12px 0;"></div>
+            <div class="form-label">2. Viral Text Banners:</div>
             <div style="display: flex; gap: 10px; margin-top: 4px; margin-bottom: 10px;">
-                <input type="text" id="studio-top-text" class="form-input" placeholder="Top Banner (e.g. EPIC ARCADE RIDE!)" style="flex: 1; font-size: 0.85rem;">
-                <input type="text" id="studio-bottom-text" class="form-input" placeholder="Bottom Banner (e.g. M5 MALL PLAY ZONE)" style="flex: 1; font-size: 0.85rem;">
+                <input type="text" id="studio-top-text" class="form-input" placeholder="Top Banner (e.g. EPIC ARCADE RIDE!)">
+                <input type="text" id="studio-bottom-text" class="form-input" placeholder="Bottom Banner (e.g. M5 MALL ZONE)">
             </div>
-
-            <!-- Theme Style -->
             <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 16px;">
-                <label style="font-size: 0.84rem; font-weight: 700; color: var(--text-muted); min-width: 90px;">3. Style Theme:</label>
-                <select id="studio-theme" class="form-select" style="flex: 1; font-size: 0.85rem;">
+                <label class="form-label" style="min-width: 90px; margin:0;">3. Theme:</label>
+                <select id="studio-theme" class="form-select">
                     <option value="yellow_bold">⚡ High-Impact Yellow (Viral Bold)</option>
                     <option value="neon_cyan">💎 Neon Cyan Glow</option>
                     <option value="red_fire">🔥 Red Alert Banner</option>
                 </select>
             </div>
-
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn btn-reject" onclick="closeThumbnailStudio()" style="padding: 10px 18px;">Cancel</button>
-                <button type="button" class="btn btn-save" onclick="saveStudioThumbnail()" style="padding: 10px 24px; font-weight: 700; background: linear-gradient(135deg, #a855f7, #6366f1);">
-                    ✨ Render & Apply Thumbnail
-                </button>
+                <button type="button" class="btn-action-secondary" onclick="closeThumbnailStudio()">Cancel</button>
+                <button type="button" class="btn-action-upload" onclick="saveStudioThumbnail()">✨ Apply Custom Thumbnail</button>
             </div>
         </div>
     </div>
 
     <!-- Audio Enhancer & Music Studio Modal -->
     <div id="audio-studio-modal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 620px; text-align: left;">
+        <div class="modal-box" style="max-width: 620px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                 <h3 style="margin: 0; color: var(--accent-blue); font-size: 1.3rem;">🎵 AI Audio Enhancer & Music Mixer</h3>
                 <button type="button" onclick="closeAudioStudio()" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">✕</button>
             </div>
-
-            <!-- Tab 1: AI Speech Clarity & Noise Reduction -->
-            <div style="background: #030712; padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 16px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <div style="font-weight: 700; font-size: 0.95rem; color: var(--accent-green);">🎙️ 1. AI Voice Clarity & Denoise</div>
-                    <span style="font-size: 0.75rem; background: rgba(74, 222, 128, 0.15); color: var(--accent-green); padding: 2px 8px; border-radius: 4px;">DSP + EBU R128</span>
-                </div>
-                <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 12px 0;">
-                    Eliminates background wind/room rumble, cleans speech frequencies, and normalizes voice loudness to YouTube broadcast standard (-16 LUFS).
-                </p>
-                <button type="button" id="btn-enhance-speech" class="btn btn-save" onclick="applyAudioEnhancement()" style="width: 100%; padding: 10px; font-weight: 700;">
-                    ⚡ Clean & Level Voice Audio Now
-                </button>
+            <div style="background: var(--bg-input); padding: 16px; border-radius: 8px; border: 1px solid var(--border-subtle); margin-bottom: 16px;">
+                <div style="font-weight: 700; color: var(--accent-green); margin-bottom: 4px;">🎙️ 1. AI Voice Clarity & Denoise</div>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Eliminates background wind/room rumble and levels voice to YouTube standard (-16 LUFS).</p>
+                <button type="button" id="btn-enhance-speech" class="btn-action-upload" onclick="applyAudioEnhancement()" style="width: 100%;">⚡ Clean Voice Audio</button>
             </div>
-
-            <!-- Tab 2: Royalty-Free Music Mixer -->
-            <div style="background: #030712; padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 16px;">
-                <div style="font-weight: 700; font-size: 0.95rem; color: var(--accent-blue); margin-bottom: 8px;">
-                    🎼 2. Royalty-Free Background Music
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 10px;">
-                    <label>Select Music Track:</label>
-                    <select id="audio-track-select" class="form-select" onchange="updateMusicPreview()">
-                        <!-- Dynamically filled -->
-                    </select>
-                </div>
-
-                <!-- Live Audio Preview Player -->
+            <div style="background: var(--bg-input); padding: 16px; border-radius: 8px; border: 1px solid var(--border-subtle); margin-bottom: 16px;">
+                <div style="font-weight: 700; color: var(--accent-blue); margin-bottom: 8px;">🎼 2. Royalty-Free Music Mixer</div>
+                <select id="audio-track-select" class="form-select" onchange="updateMusicPreview()" style="margin-bottom: 10px;"></select>
                 <audio id="audio-preview-player" controls style="width: 100%; height: 32px; margin-bottom: 10px;"></audio>
-
-                <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
-                    <div style="flex: 1; min-width: 160px;">
-                        <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted);">Music Volume: <span id="vol-display">20%</span></label>
+                <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 10px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">Volume: <span id="vol-display">20%</span></label>
                         <input type="range" id="audio-vol-slider" min="5" max="50" value="20" style="width: 100%;" oninput="document.getElementById('vol-display').textContent = this.value + '%'">
                     </div>
-                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--text-muted); cursor: pointer;">
-                        <input type="checkbox" id="audio-ducking-cb" checked style="width: 18px; height: 18px;">
-                        <span>Auto-Ducking (lowers music when speaking)</span>
+                    <label style="font-size: 0.8rem; color: var(--text-muted); display:flex; align-items:center; gap:6px; cursor:pointer;">
+                        <input type="checkbox" id="audio-ducking-cb" checked> Auto-Ducking
                     </label>
                 </div>
-
-                <button type="button" id="btn-mix-music" class="btn btn-approve" onclick="applyMusicMix()" style="width: 100%; padding: 10px; font-weight: 700; background: linear-gradient(135deg, #0ea5e9, #0284c7);">
-                    🎵 Mix Background Music into Video
-                </button>
+                <button type="button" id="btn-mix-music" class="btn-action-upload" onclick="applyMusicMix()" style="width: 100%;">🎵 Mix Music into Video</button>
             </div>
-
-            <div style="text-align: right;">
-                <button type="button" class="btn btn-reject" onclick="closeAudioStudio()" style="padding: 8px 18px;">Close</button>
-            </div>
+            <div style="text-align: right;"><button type="button" class="btn-action-secondary" onclick="closeAudioStudio()">Close</button></div>
         </div>
     </div>
 
     <!-- Color Grade Studio Modal -->
     <div id="color-grade-modal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 580px; text-align: left;">
+        <div class="modal-box" style="max-width: 580px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                 <h3 style="margin: 0; color: var(--accent-yellow); font-size: 1.3rem;">🎨 Cinematic Color Grading (Apple Silicon M4)</h3>
                 <button type="button" onclick="closeColorGradeStudio()" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">✕</button>
             </div>
-
-            <label style="font-size: 0.84rem; font-weight: 700; color: var(--text-muted);">Choose Cinematic LUT Filter:</label>
-            <div style="display: flex; flex-direction: column; gap: 10px; margin: 12px 0 16px 0;">
-                <label style="display: flex; align-items: flex-start; gap: 10px; background: #030712; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); cursor: pointer;">
-                    <input type="radio" name="lut_choice" value="golden_hour" checked style="margin-top: 3px;">
-                    <div>
-                        <div style="font-weight: 700; font-size: 0.92rem; color: #f59e0b;">🌅 Golden Hour Warmth</div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">Rich amber glow, enhanced warm skin tones and softened highlights.</div>
-                    </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+                <label style="display: flex; gap: 10px; background: var(--bg-input); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle); cursor: pointer;">
+                    <input type="radio" name="lut_choice" value="golden_hour" checked>
+                    <div><div style="font-weight: 700; color: #f59e0b;">🌅 Golden Hour Warmth</div><div style="font-size: 0.78rem; color: var(--text-muted);">Rich amber glow & warm skin tones.</div></div>
                 </label>
-                <label style="display: flex; align-items: flex-start; gap: 10px; background: #030712; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); cursor: pointer;">
-                    <input type="radio" name="lut_choice" value="teal_orange" style="margin-top: 3px;">
-                    <div>
-                        <div style="font-weight: 700; font-size: 0.92rem; color: #06b6d4;">🌊 Teal & Orange (Hollywood Cinema)</div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">High-contrast blockbuster aesthetic with rich blues/teals and vibrant warmth.</div>
-                    </div>
+                <label style="display: flex; gap: 10px; background: var(--bg-input); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle); cursor: pointer;">
+                    <input type="radio" name="lut_choice" value="teal_orange">
+                    <div><div style="font-weight: 700; color: #06b6d4;">🌊 Teal & Orange (Hollywood Cinema)</div><div style="font-size: 0.78rem; color: var(--text-muted);">Blockbuster high-contrast color balance.</div></div>
                 </label>
-                <label style="display: flex; align-items: flex-start; gap: 10px; background: #030712; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); cursor: pointer;">
-                    <input type="radio" name="lut_choice" value="vibrant_hdr" style="margin-top: 3px;">
-                    <div>
-                        <div style="font-weight: 700; font-size: 0.92rem; color: #a855f7;">💎 Vibrant HDR Pop</div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">Hyper-punchy colors, crystal clarity, and enhanced local edge contrast.</div>
-                    </div>
+                <label style="display: flex; gap: 10px; background: var(--bg-input); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle); cursor: pointer;">
+                    <input type="radio" name="lut_choice" value="vibrant_hdr">
+                    <div><div style="font-weight: 700; color: #a855f7;">💎 Vibrant HDR Pop</div><div style="font-size: 0.78rem; color: var(--text-muted);">Hyper-punchy saturated colors & edge sharpness.</div></div>
                 </label>
-                <label style="display: flex; align-items: flex-start; gap: 10px; background: #030712; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); cursor: pointer;">
-                    <input type="radio" name="lut_choice" value="moody_film" style="margin-top: 3px;">
-                    <div>
-                        <div style="font-weight: 700; font-size: 0.92rem; color: #94a3b8;">🎥 Moody Vintage 35mm</div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">Matte shadows, muted nostalgic tones, and authentic 35mm film look.</div>
-                    </div>
+                <label style="display: flex; gap: 10px; background: var(--bg-input); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle); cursor: pointer;">
+                    <input type="radio" name="lut_choice" value="moody_film">
+                    <div><div style="font-weight: 700; color: #94a3b8;">🎥 Moody Vintage 35mm</div><div style="font-size: 0.78rem; color: var(--text-muted);">Matte shadows & authentic film curves.</div></div>
                 </label>
             </div>
-
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn btn-reject" onclick="closeColorGradeStudio()" style="padding: 10px 18px;">Cancel</button>
-                <button type="button" id="btn-apply-color" class="btn btn-save" onclick="applyColorGrade()" style="padding: 10px 24px; font-weight: 700; background: linear-gradient(135deg, #f59e0b, #d97706); color: #000;">
-                    🎬 Render Cinematic Grade
-                </button>
+                <button type="button" class="btn-action-secondary" onclick="closeColorGradeStudio()">Cancel</button>
+                <button type="button" id="btn-apply-color" class="btn-action-upload" onclick="applyColorGrade()">🎬 Apply Grade</button>
             </div>
         </div>
     </div>
 
     <!-- Competitor Keyword Spy Modal -->
     <div id="keyword-spy-modal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 680px; text-align: left;">
+        <div class="modal-box" style="max-width: 680px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                <h3 style="margin: 0; color: var(--accent-blue); font-size: 1.3rem;">🕵️ Competitor & Niche Keyword Spy</h3>
+                <h3 style="margin: 0; color: var(--accent-blue); font-size: 1.3rem;">🕵️ Competitor Keyword Spy</h3>
                 <button type="button" onclick="closeKeywordSpy()" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">✕</button>
             </div>
-
-            <!-- Search input bar -->
             <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-                <input type="text" id="spy-query-input" class="form-input" placeholder="Search topic or keywords..." style="flex: 1; font-size: 0.88rem;">
-                <button type="button" class="btn btn-save" onclick="runKeywordSpySearch()" style="padding: 8px 16px; font-size: 0.85rem;">🔍 Search Top Videos</button>
+                <input type="text" id="spy-query-input" class="form-input" placeholder="Search topic...">
+                <button type="button" class="btn-action-upload" onclick="runKeywordSpySearch()" style="padding: 8px 16px; font-size: 0.82rem;">🔍 Search</button>
             </div>
-
-            <!-- Results container -->
-            <div id="spy-results-box" style="max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
-                <div style="color: var(--text-muted); font-size: 0.85rem;">Loading competitor insights...</div>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
-                <button type="button" class="btn btn-approve" onclick="injectRecommendedTags()" style="padding: 8px 16px; font-size: 0.85rem; background: linear-gradient(135deg, #38bdf8, #22c55e);">
-                    🎯 Auto-Inject Recommended Tags into Video
-                </button>
-                <button type="button" class="btn btn-reject" onclick="closeKeywordSpy()" style="padding: 8px 16px;">Close</button>
+            <div id="spy-results-box" style="max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;"></div>
+            <div style="display: flex; justify-content: space-between; margin-top: 14px;">
+                <button type="button" class="btn-action-upload" onclick="injectRecommendedTags()" style="padding: 8px 16px; font-size: 0.82rem;">🎯 Inject Tags into Video</button>
+                <button type="button" class="btn-action-secondary" onclick="closeKeywordSpy()">Close</button>
             </div>
         </div>
     </div>
 
     <!-- Community Teaser GIF & Poll Modal -->
     <div id="community-modal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 620px; text-align: left;">
+        <div class="modal-box" style="max-width: 620px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                 <h3 style="margin: 0; color: var(--accent-purple); font-size: 1.3rem;">🖼️ Community Tab Teaser & Poll</h3>
                 <button type="button" onclick="closeCommunityStudio()" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">✕</button>
             </div>
-
-            <div id="community-content-box" style="display: flex; flex-direction: column; gap: 12px;">
-                <div style="color: var(--text-muted); font-size: 0.85rem;">Generating 3s animated teaser GIF and community poll...</div>
-            </div>
-
-            <div style="text-align: right; margin-top: 14px;">
-                <button type="button" class="btn btn-reject" onclick="closeCommunityStudio()" style="padding: 8px 18px;">Close</button>
-            </div>
+            <div id="community-content-box" style="display: flex; flex-direction: column; gap: 12px;"></div>
+            <div style="text-align: right; margin-top: 14px;"><button type="button" class="btn-action-secondary" onclick="closeCommunityStudio()">Close</button></div>
         </div>
     </div>
 
+    <!-- Merge Progress Modal -->
+    <div id="merge-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 480px; text-align: center;">
+            <h3 style="margin: 0; color: var(--accent-blue);">🎬 Merging Selected Videos</h3>
+            <p id="merge-status-msg" style="color: var(--text-muted); font-size: 0.88rem; margin: 8px 0 16px 0;">Combining video streams on Apple Silicon M4 GPU...</p>
+            <div class="progress-track"><div id="merge-progress-fill" class="progress-fill"></div></div>
+            <div id="merge-pct" style="font-weight: bold; font-size: 1.1rem; color: var(--accent-green); margin-top: 10px;">0%</div>
+        </div>
+    </div>
+
+    <!-- Live Staging Progress Modal -->
+    <div id="staging-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 480px; text-align: center;">
+            <h3 style="margin: 0; color: var(--accent-blue);">📥 Staging Video Files</h3>
+            <p id="staging-status-msg" style="color: var(--text-muted); font-size: 0.88rem; margin: 8px 0 16px 0;">Transferring to staging folder...</p>
+            <div class="progress-track"><div id="staging-progress-fill" class="progress-fill"></div></div>
+            <div id="staging-pct" style="font-weight: bold; font-size: 1.1rem; color: var(--accent-green); margin-top: 10px;">0%</div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
     <script>
+        // --- View Mode Toggle ---
+        function switchView(mode) {
+            const gridContainer = document.getElementById('grid-view-container');
+            const tableContainer = document.getElementById('table-view-container');
+            const btnGrid = document.getElementById('btn-view-grid');
+            const btnTable = document.getElementById('btn-view-table');
+
+            if (mode === 'table') {
+                gridContainer.style.display = 'none';
+                tableContainer.style.display = 'block';
+                btnGrid.classList.remove('active');
+                btnTable.classList.add('active');
+            } else {
+                gridContainer.style.display = 'grid';
+                tableContainer.style.display = 'none';
+                btnTable.classList.remove('active');
+                btnGrid.classList.add('active');
+            }
+        }
+
+        // --- Card Inspector Sub-Tabs ---
+        function switchCardTab(videoId, tabName) {
+            const card = document.getElementById(`card-${videoId}`);
+            if (!card) return;
+            card.querySelectorAll('.subtab-btn').forEach(btn => btn.classList.remove('active'));
+            card.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+
+            event.target.classList.add('active');
+            const targetPanel = document.getElementById(`panel-${tabName}-${videoId}`);
+            if (targetPanel) targetPanel.classList.add('active');
+        }
+
+        // --- In-Browser Video Player Modal ---
+        function openVideoPlayer(videoId, title) {
+            const modal = document.getElementById('video-player-modal');
+            const player = document.getElementById('studio-video-player');
+            const titleElem = document.getElementById('player-title');
+
+            titleElem.textContent = `🎬 ${title}`;
+            player.src = `/api/videos/${videoId}/stream`;
+            modal.style.display = 'flex';
+        }
+
+        function closeVideoPlayer() {
+            const modal = document.getElementById('video-player-modal');
+            const player = document.getElementById('studio-video-player');
+            player.pause();
+            player.src = '';
+            modal.style.display = 'none';
+        }
+
+        // --- Live Search, Category & Privacy Filters ---
+        let currentFilterStatus = 'ALL';
+
         function filterCategory(status) {
+            currentFilterStatus = status;
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             if (event && event.target) event.target.classList.add('active');
+            filterVideosLive();
+        }
 
-            document.querySelectorAll('.video-card').forEach(card => {
-                const cardStatus = card.dataset.status;
-                if (status === 'ALL') {
-                    card.style.display = 'flex';
-                } else if (status === 'AWAITING_APPROVAL') {
-                    if (['AWAITING_APPROVAL', 'ANALYZED', 'METADATA_READY', 'DISCOVERED', 'STABILIZING'].includes(cardStatus)) {
-                        card.style.display = 'flex';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                } else if (status === 'UPLOADED') {
-                    if (['UPLOADED', 'ARCHIVED'].includes(cardStatus)) {
-                        card.style.display = 'flex';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                } else if (status === 'REJECTED') {
-                    if (['REJECTED', 'DUPLICATE'].includes(cardStatus)) {
-                        card.style.display = 'flex';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                } else {
-                    if (cardStatus === status) {
-                        card.style.display = 'flex';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                }
+        function filterVideosLive() {
+            const searchVal = document.getElementById('live-search').value.toLowerCase().trim();
+            const privacyVal = document.getElementById('privacy-filter').value.toLowerCase();
+
+            const cards = document.querySelectorAll('.video-card');
+            const rows = document.querySelectorAll('.data-table tbody tr');
+
+            const checkMatch = (cardStatus, cardTitle, cardPrivacy) => {
+                let statusMatch = (currentFilterStatus === 'ALL') ||
+                    (currentFilterStatus === 'AWAITING_APPROVAL' && ['AWAITING_APPROVAL', 'ANALYZED', 'METADATA_READY', 'DISCOVERED', 'STABILIZING'].includes(cardStatus)) ||
+                    (currentFilterStatus === 'UPLOADED' && ['UPLOADED', 'ARCHIVED'].includes(cardStatus)) ||
+                    (cardStatus === currentFilterStatus);
+
+                let searchMatch = !searchVal || cardTitle.includes(searchVal);
+                let privacyMatch = (privacyVal === 'all') || (cardPrivacy === privacyVal);
+
+                return statusMatch && searchMatch && privacyMatch;
+            };
+
+            cards.forEach(card => {
+                card.style.display = checkMatch(card.dataset.status, card.dataset.title, card.dataset.privacy) ? 'flex' : 'none';
+            });
+
+            rows.forEach(row => {
+                row.style.display = checkMatch(row.dataset.status, row.dataset.title, row.dataset.privacy) ? '' : 'none';
             });
         }
 
-        function updateMergeBar() {
-            const checkedBoxes = document.querySelectorAll('.video-select-cb:checked');
-            const mergeBar = document.getElementById('merge-bar');
-            const countLabel = document.getElementById('merge-count');
+        function sortVideosLive() {
+            const sortVal = document.getElementById('sort-select').value;
+            const grid = document.getElementById('grid-view-container');
+            const cards = Array.from(grid.querySelectorAll('.video-card'));
 
-            if (checkedBoxes.length >= 1) {
-                mergeBar.style.display = 'flex';
-                countLabel.textContent = `☑️ ${checkedBoxes.length} Videos Selected`;
-            } else {
-                mergeBar.style.display = 'none';
-            }
+            cards.sort((a, b) => {
+                if (sortVal === 'newest') return parseInt(b.dataset.id) - parseInt(a.dataset.id);
+                if (sortVal === 'oldest') return parseInt(a.dataset.id) - parseInt(b.dataset.id);
+                if (sortVal === 'title') return a.dataset.title.localeCompare(b.dataset.title);
+                return 0;
+            });
+
+            cards.forEach(c => grid.appendChild(c));
+        }
+
+        // --- Activity Poller ---
+        setInterval(async () => {
+            try {
+                const res = await fetch('/api/engine/activity');
+                const data = await res.json();
+                const globalBar = document.getElementById('global-upload-bar');
+                const globalMsg = document.getElementById('global-upload-msg');
+                const globalFill = document.getElementById('global-progress-fill');
+                const globalPct = document.getElementById('global-upload-pct');
+
+                if (data && data.active && data.type === 'UPLOADING') {
+                    globalBar.style.display = 'block';
+                    globalMsg.textContent = data.message;
+                    globalFill.style.width = data.percent + '%';
+                    globalPct.textContent = data.percent + '%';
+                    if (data.percent >= 100) {
+                        setTimeout(() => window.location.reload(), 1500);
+                    }
+                } else {
+                    globalBar.style.display = 'none';
+                }
+            } catch (e) {}
+        }, 1500);
+
+        // --- Staging Upload Handler ---
+        function handleFileSelect(input) {
+            const count = input.files.length;
+            document.getElementById('drop-label').textContent = `${count} video file(s) selected`;
         }
 
         function handleStageUpload(event) {
             event.preventDefault();
-            const form = event.target;
-            const fileInput = document.getElementById('stage-file-input');
-            if (!fileInput.files || fileInput.files.length === 0) return;
+            const form = document.getElementById('stage-upload-form');
+            const input = document.getElementById('file-picker');
+            if (!input.files || input.files.length === 0) {
+                alert('Please select video files to stage.');
+                return;
+            }
 
-            const modal = document.getElementById('stage-modal');
-            const progressFill = document.getElementById('stage-progress-fill');
-            const pctLabel = document.getElementById('stage-pct');
-            const detailLabel = document.getElementById('stage-detail-msg');
-            const statusMsg = document.getElementById('stage-status-msg');
-
+            const modal = document.getElementById('staging-modal');
+            const fill = document.getElementById('staging-progress-fill');
+            const pctText = document.getElementById('staging-pct');
+            const msg = document.getElementById('staging-status-msg');
             modal.style.display = 'flex';
-            progressFill.style.width = '0%';
-            pctLabel.textContent = '0%';
-            statusMsg.textContent = `Uploading ${fileInput.files.length} video file(s)...`;
 
             const formData = new FormData(form);
             const xhr = new XMLHttpRequest();
 
             xhr.upload.addEventListener('progress', (e) => {
                 if (e.lengthComputable) {
-                    const percent = Math.round((e.loaded / e.total) * 100);
-                    const loadedMB = (e.loaded / (1024 * 1024)).toFixed(1);
-                    const totalMB = (e.total / (1024 * 1024)).toFixed(1);
-                    progressFill.style.width = percent + '%';
-                    pctLabel.textContent = percent + '%';
-                    detailLabel.textContent = `${loadedMB} MB / ${totalMB} MB transferred`;
-                    if (percent >= 100) {
-                        statusMsg.textContent = '⚡ Saving files & generating preview thumbnails...';
-                        detailLabel.textContent = 'Analyzing video keyframes...';
-                    }
+                    const pct = Math.round((e.loaded / e.total) * 100);
+                    fill.style.width = pct + '%';
+                    pctText.textContent = pct + '%';
+                    const mbLoaded = (e.loaded / (1024 * 1024)).toFixed(1);
+                    const mbTotal = (e.total / (1024 * 1024)).toFixed(1);
+                    msg.textContent = `Uploading files: ${mbLoaded} MB / ${mbTotal} MB...`;
                 }
             });
 
             xhr.addEventListener('load', () => {
-                progressFill.style.width = '100%';
-                pctLabel.textContent = '100%';
-                statusMsg.textContent = '✅ Staging Complete! Refreshing dashboard...';
-                setTimeout(() => {
-                    window.location.reload();
-                }, 600);
+                msg.textContent = 'Analyzing keyframes & generating AI metadata...';
+                setTimeout(() => window.location.reload(), 800);
             });
-
-            xhr.addEventListener('error', () => {
-                alert('Upload error occurred. Please try again.');
-                modal.style.display = 'none';
-            });
-
             xhr.open('POST', '/api/videos/upload');
             xhr.send(formData);
+        }
+
+        // --- Discard Actions ---
+        async function discardSingleVideo(videoId) {
+            if (!confirm('Are you sure you want to discard this video from the queue?')) return;
+            try {
+                await fetch(`/api/videos/${videoId}/discard`, { method: 'POST' });
+                window.location.reload();
+            } catch (e) { alert('Error: ' + e.message); }
         }
 
         async function discardSelectedVideos() {
             const checkedBoxes = document.querySelectorAll('.video-select-cb:checked');
             if (checkedBoxes.length === 0) return;
-            if (!confirm(`Are you sure you want to discard and delete ${checkedBoxes.length} selected video(s) from the queue?`)) return;
+            if (!confirm(`Discard and delete ${checkedBoxes.length} selected video(s)?`)) return;
+
+            const formData = new FormData();
+            checkedBoxes.forEach(cb => formData.append('video_ids', cb.value));
+            try {
+                await fetch('/api/videos/discard_batch', { method: 'POST', body: formData });
+                window.location.reload();
+            } catch (e) { alert('Error: ' + e.message); }
+        }
+
+        // --- Batch Merge Bar ---
+        function updateMergeBar() {
+            const checkedBoxes = document.querySelectorAll('.video-select-cb:checked');
+            const count = checkedBoxes.length;
+            const bar = document.getElementById('merge-bar');
+            document.getElementById('merge-count').textContent = `${count} video clip(s) selected`;
+            bar.style.display = count > 0 ? 'flex' : 'none';
+        }
+
+        async function openMergeModal() {
+            const checkedBoxes = document.querySelectorAll('.video-select-cb:checked');
+            if (checkedBoxes.length < 2) {
+                alert('Please select at least 2 videos to merge.');
+                return;
+            }
+            const modal = document.getElementById('merge-modal');
+            const fill = document.getElementById('merge-progress-fill');
+            const pct = document.getElementById('merge-pct');
+            modal.style.display = 'flex';
 
             const formData = new FormData();
             checkedBoxes.forEach(cb => formData.append('video_ids', cb.value));
 
+            const poller = setInterval(async () => {
+                try {
+                    const res = await fetch('/api/videos/merge/progress');
+                    const data = await res.json();
+                    if (data) {
+                        fill.style.width = data.progress + '%';
+                        pct.textContent = data.progress + '%';
+                    }
+                } catch (e) {}
+            }, 500);
+
             try {
-                await fetch('/api/videos/discard_batch', {
-                    method: 'POST',
-                    body: formData
-                });
+                await fetch('/api/videos/merge', { method: 'POST', body: formData });
+                clearInterval(poller);
                 window.location.reload();
             } catch (e) {
-                alert('Error discarding videos: ' + e.message);
+                clearInterval(poller);
+                alert('Merge error: ' + e.message);
+                modal.style.display = 'none';
             }
         }
 
-        // --- Thumbnail Studio JS ---
-        let currentStudioVideoId = null;
-        let currentStudioBaseFrame = null;
-
-        async function openThumbnailStudio(videoId, currentThumb) {
-            currentStudioVideoId = videoId;
-            currentStudioBaseFrame = currentThumb;
-            const modal = document.getElementById('thumb-studio-modal');
-            const previewImg = document.getElementById('studio-preview-img');
-            const grid = document.getElementById('studio-candidates-grid');
-            
-            previewImg.src = currentThumb || '';
-            grid.innerHTML = '<div style="color:var(--text-muted); font-size:0.8rem;">Loading candidate frames...</div>';
-            modal.style.display = 'flex';
-
+        // --- Vision AI Trigger ---
+        async function triggerVisionAI(videoId) {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '🤖 Gemini Vision AI Analyzing...';
             try {
-                const res = await fetch(`/api/videos/${videoId}/thumbnail_candidates`);
+                const formData = new FormData();
+                const ctx = document.querySelector(`#panel-meta-${videoId} textarea[name="user_context"]`);
+                if (ctx) formData.append('user_context', ctx.value);
+
+                const res = await fetch(`/api/videos/${videoId}/analyze_ai`, { method: 'POST', body: formData });
                 const data = await res.json();
-                if (data && data.candidates && data.candidates.length > 0) {
-                    grid.innerHTML = '';
-                    data.candidates.forEach((cand, idx) => {
-                        const img = document.createElement('img');
-                        img.src = cand;
-                        img.style.cssText = 'height: 60px; width: 100px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 2px solid transparent; flex-shrink: 0;';
-                        if (idx === 0 && !currentStudioBaseFrame) {
-                            currentStudioBaseFrame = cand;
-                            previewImg.src = cand;
-                        }
-                        img.onclick = () => {
-                            grid.querySelectorAll('img').forEach(i => i.style.borderColor = 'transparent');
-                            img.style.borderColor = 'var(--accent-purple)';
-                            currentStudioBaseFrame = cand;
-                            previewImg.src = cand;
-                        };
-                        grid.appendChild(img);
-                    });
+                if (data.success) {
+                    window.location.reload();
                 } else {
-                    grid.innerHTML = '<div style="color:var(--text-muted); font-size:0.8rem;">No extra frames found.</div>';
-                }
-            } catch (e) {
-                grid.innerHTML = '<div style="color:var(--accent-red); font-size:0.8rem;">Error loading frames.</div>';
-            }
-        }
-
-        function closeThumbnailStudio() {
-            document.getElementById('thumb-studio-modal').style.display = 'none';
-        }
-
-        async function saveStudioThumbnail() {
-            if (!currentStudioVideoId || !currentStudioBaseFrame) return;
-            const topText = document.getElementById('studio-top-text').value;
-            const bottomText = document.getElementById('studio-bottom-text').value;
-            const theme = document.getElementById('studio-theme').value;
-
-            const formData = new FormData();
-            formData.append('base_image', currentStudioBaseFrame);
-            formData.append('top_text', topText);
-            formData.append('bottom_text', bottomText);
-            formData.append('theme', theme);
-
-            try {
-                const res = await fetch(`/api/videos/${currentStudioVideoId}/apply_thumbnail_overlay`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await res.json();
-                if (data.success && data.thumbnail_url) {
-                    const mainImg = document.getElementById(`main-thumb-${currentStudioVideoId}`);
-                    if (mainImg) mainImg.src = data.thumbnail_url + '?t=' + Date.now();
-                    closeThumbnailStudio();
-                } else {
-                    alert('Error applying thumbnail');
+                    alert('AI Error: ' + (data.error || 'Failed'));
+                    btn.disabled = false;
+                    btn.textContent = '✨ Vision AI Rewrite';
                 }
             } catch (e) {
                 alert('Error: ' + e.message);
+                btn.disabled = false;
+                btn.textContent = '✨ Vision AI Rewrite';
             }
         }
 
+        // --- Shorts, Subtitles, Kinetic Text ---
         async function convertToShorts(videoId) {
-            if (!confirm('Convert this video into 1080x1920 9:16 Shorts format with blurred padding using Apple Silicon M4 GPU?')) return;
+            if (!confirm('Convert to 1080x1920 9:16 vertical Shorts on Apple Silicon M4 GPU?')) return;
             try {
                 const res = await fetch(`/api/videos/${videoId}/convert_to_shorts`, { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
-                    alert('✅ 9:16 Shorts video created and staged on your dashboard!');
+                    alert('✅ 9:16 Shorts created!');
                     window.location.reload();
-                } else {
-                    alert('Error: ' + (data.error || 'Failed to convert'));
-                }
-            } catch (e) {
-                alert('Error: ' + e.message);
-            }
+                } else { alert('Error: ' + (data.error || 'Failed')); }
+            } catch (e) { alert('Error: ' + e.message); }
         }
 
-        async function generateCaptions(videoId) {
-            const btn = event.target;
-            btn.disabled = true;
-            btn.textContent = '🎙️ Transcribing Audio with AI...';
-            try {
-                const res = await fetch(`/api/videos/${videoId}/generate_captions`, { method: 'POST' });
-                const data = await res.json();
-                if (data.success) {
-                    btn.textContent = '✅ Subtitles (.SRT) Ready!';
-                    btn.style.background = '#166534';
-                } else {
-                    btn.textContent = '⚠️ No speech detected';
-                    btn.disabled = false;
-                }
-            } catch (e) {
-                btn.textContent = '⚠️ Transcription error';
-                btn.disabled = false;
-            }
-        }
-
-        // --- Audio Studio JS ---
-        let currentAudioVideoId = null;
-
-        async function openAudioStudio(videoId) {
-            currentAudioVideoId = videoId;
-            const modal = document.getElementById('audio-studio-modal');
-            const select = document.getElementById('audio-track-select');
-            modal.style.display = 'flex';
-
-            try {
-                const res = await fetch('/api/audio/tracks');
-                const data = await res.json();
-                if (data && data.tracks) {
-                    select.innerHTML = '';
-                    data.tracks.forEach((t, i) => {
-                        const opt = document.createElement('option');
-                        opt.value = t.filename;
-                        opt.textContent = t.title;
-                        opt.dataset.path = t.path;
-                        select.appendChild(opt);
-                    });
-                    updateMusicPreview();
-                }
-            } catch (e) {
-                console.error('Error fetching audio tracks:', e);
-            }
-        }
-
-        function updateMusicPreview() {
-            const select = document.getElementById('audio-track-select');
-            const player = document.getElementById('audio-preview-player');
-            const opt = select.options[select.selectedIndex];
-            if (opt && opt.dataset.path) {
-                player.src = opt.dataset.path;
-            }
-        }
-
-        function closeAudioStudio() {
-            const player = document.getElementById('audio-preview-player');
-            if (player) player.pause();
-            document.getElementById('audio-studio-modal').style.display = 'none';
-        }
-
-        async function applyAudioEnhancement() {
-            if (!currentAudioVideoId) return;
-            const btn = document.getElementById('btn-enhance-speech');
-            btn.disabled = true;
-            btn.textContent = '⚡ Enhancing speech & leveling loudness...';
-
-            try {
-                const res = await fetch(`/api/videos/${currentAudioVideoId}/enhance_audio`, { method: 'POST' });
-                const data = await res.json();
-                if (data.success) {
-                    alert('✅ Audio cleaned and normalized to YouTube broadcast standard!');
-                    closeAudioStudio();
-                    window.location.reload();
-                } else {
-                    alert('Error: ' + (data.error || 'Enhancement failed'));
-                    btn.disabled = false;
-                    btn.textContent = '⚡ Clean & Level Voice Audio Now';
-                }
-            } catch (e) {
-                alert('Error: ' + e.message);
-                btn.disabled = false;
-                btn.textContent = '⚡ Clean & Level Voice Audio Now';
-            }
-        }
-
-        async function applyMusicMix() {
-            if (!currentAudioVideoId) return;
-            const btn = document.getElementById('btn-mix-music');
-            const track = document.getElementById('audio-track-select').value;
-            const vol = parseFloat(document.getElementById('audio-vol-slider').value) / 100.0;
-            const ducking = document.getElementById('audio-ducking-cb').checked;
-
-            btn.disabled = true;
-            btn.textContent = '🎵 Mixing background music with Apple Silicon acceleration...';
-
-            const formData = new FormData();
-            formData.append('music_track', track);
-            formData.append('music_volume', vol);
-            formData.append('auto_ducking', ducking);
-
-            try {
-                const res = await fetch(`/api/videos/${currentAudioVideoId}/mix_music`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert('✅ Background music mixed successfully with auto-ducking!');
-                    closeAudioStudio();
-                    window.location.reload();
-                } else {
-                    alert('Error: ' + (data.error || 'Mixing failed'));
-                    btn.disabled = false;
-                    btn.textContent = '🎵 Mix Background Music into Video';
-                }
-            } catch (e) {
-                alert('Error: ' + e.message);
-                btn.disabled = false;
-                btn.textContent = '🎵 Mix Background Music into Video';
-            }
-        }
-
-        async function generateMultilingual(videoId) {
-            const btn = event.target;
-            btn.disabled = true;
-            btn.textContent = '🌍 Translating...';
-            try {
-                const res = await fetch(`/api/videos/${videoId}/generate_multilingual`, { method: 'POST' });
-                const data = await res.json();
-                if (data.success) {
-                    btn.textContent = '✅ 5 Languages Ready!';
-                    btn.style.background = '#166534';
-                    alert(`✅ Multilingual package generated for Spanish 🇪🇸, Hindi 🇮🇳, French 🇫🇷, German 🇩🇪, and Japanese 🇯🇵!`);
-                } else {
-                    alert('Translation error: ' + (data.error || 'Failed'));
-                    btn.disabled = false;
-                    btn.textContent = '🌍 Multilingual';
-                }
-            } catch (e) {
-                alert('Error: ' + e.message);
-                btn.disabled = false;
-                btn.textContent = '🌍 Multilingual';
-            }
-        }
-
-        async function addEndScreenBumper(videoId) {
-            if (!confirm('Append a 5-second cinematic "Thanks for Watching & Subscribe" End Screen outro bumper with Apple Silicon M4 GPU acceleration?')) return;
-            const btn = event.target;
-            btn.disabled = true;
-            btn.textContent = '🎬 Appending Outro...';
-            try {
-                const res = await fetch(`/api/videos/${videoId}/add_endscreen`, { method: 'POST' });
-                const data = await res.json();
-                if (data.success) {
-                    alert('✅ 5-second End Screen outro bumper appended to video!');
-                    window.location.reload();
-                } else {
-                    alert('Error: ' + (data.error || 'Failed'));
-                    btn.disabled = false;
-                    btn.textContent = '🎬 End Screen';
-                }
-            } catch (e) {
-                alert('Error: ' + e.message);
-                btn.disabled = false;
-                btn.textContent = '🎬 End Screen';
-            }
-        }
-
-        // --- 1. Kinetic Word-by-Word Captions ---
         async function burnKineticCaptions(videoId) {
-            if (!confirm('Burn high-impact MrBeast/Hormozi style kinetic subtitles into this video using Apple Silicon M4 GPU?')) return;
+            if (!confirm('Burn MrBeast/Hormozi style kinetic subtitles on M4 GPU?')) return;
             const btn = event.target;
             btn.disabled = true;
-            btn.textContent = '⚡ Burning Kinetic Subtitles...';
+            btn.textContent = '⚡ Burning...';
             try {
                 const res = await fetch(`/api/videos/${videoId}/burn_kinetic_captions`, { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
-                    alert('✅ Kinetic word-by-word subtitles burned into video!');
+                    alert('✅ Kinetic subtitles burned into video!');
                     window.location.reload();
                 } else {
                     alert('Error: ' + (data.error || 'Failed'));
@@ -1486,145 +1533,293 @@
             }
         }
 
-        // --- 2. Color Grading Studio ---
-        let currentColorVideoId = null;
+        async function generateCaptions(videoId) {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '🎙️ Transcribing...';
+            try {
+                const res = await fetch(`/api/videos/${videoId}/generate_captions`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    btn.textContent = '✅ .SRT Ready';
+                    btn.style.borderColor = 'var(--accent-green)';
+                } else {
+                    btn.textContent = '⚠️ No speech';
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                btn.textContent = '⚠️ Error';
+                btn.disabled = false;
+            }
+        }
 
+        async function addEndScreenBumper(videoId) {
+            if (!confirm('Append 5s End Screen outro bumper with M4 GPU acceleration?')) return;
+            try {
+                const res = await fetch(`/api/videos/${videoId}/add_endscreen`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ 5-second End Screen outro bumper added!');
+                    window.location.reload();
+                } else { alert('Error: ' + (data.error || 'Failed')); }
+            } catch (e) { alert('Error: ' + e.message); }
+        }
+
+        async function generateMultilingual(videoId) {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '🌍 Translating...';
+            try {
+                const res = await fetch(`/api/videos/${videoId}/generate_multilingual`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    btn.textContent = '✅ 5 Languages';
+                    btn.style.borderColor = 'var(--accent-green)';
+                    alert('✅ Multilingual package generated for Spanish, Hindi, French, German, and Japanese!');
+                } else {
+                    alert('Error: ' + (data.error || 'Failed'));
+                    btn.disabled = false;
+                    btn.textContent = '🌍 5 Languages';
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+                btn.disabled = false;
+                btn.textContent = '🌍 5 Languages';
+            }
+        }
+
+        // --- Thumbnail Studio ---
+        let currentStudioVideoId = null;
+        let currentStudioBaseFrame = null;
+
+        async function openThumbnailStudio(videoId, currentThumb) {
+            currentStudioVideoId = videoId;
+            currentStudioBaseFrame = currentThumb;
+            const modal = document.getElementById('thumb-studio-modal');
+            const previewImg = document.getElementById('studio-preview-img');
+            const grid = document.getElementById('studio-candidates-grid');
+            previewImg.src = currentThumb || '';
+            grid.innerHTML = '<div style="color:var(--text-muted); font-size:0.8rem;">Loading candidate frames...</div>';
+            modal.style.display = 'flex';
+
+            try {
+                const res = await fetch(`/api/videos/${videoId}/thumbnail_candidates`);
+                const data = await res.json();
+                if (data && data.candidates && data.candidates.length > 0) {
+                    grid.innerHTML = '';
+                    data.candidates.forEach((cand, idx) => {
+                        const img = document.createElement('img');
+                        img.src = cand;
+                        img.style.cssText = 'height: 54px; width: 90px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 2px solid transparent; flex-shrink: 0;';
+                        if (idx === 0 && !currentStudioBaseFrame) {
+                            currentStudioBaseFrame = cand;
+                            previewImg.src = cand;
+                        }
+                        img.onclick = () => {
+                            grid.querySelectorAll('img').forEach(i => i.style.borderColor = 'transparent');
+                            img.style.borderColor = 'var(--accent-purple)';
+                            currentStudioBaseFrame = cand;
+                            previewImg.src = cand;
+                        };
+                        grid.appendChild(img);
+                    });
+                }
+            } catch (e) {}
+        }
+
+        function closeThumbnailStudio() { document.getElementById('thumb-studio-modal').style.display = 'none'; }
+
+        async function saveStudioThumbnail() {
+            if (!currentStudioVideoId || !currentStudioBaseFrame) return;
+            const formData = new FormData();
+            formData.append('base_image', currentStudioBaseFrame);
+            formData.append('top_text', document.getElementById('studio-top-text').value);
+            formData.append('bottom_text', document.getElementById('studio-bottom-text').value);
+            formData.append('theme', document.getElementById('studio-theme').value);
+
+            try {
+                const res = await fetch(`/api/videos/${currentStudioVideoId}/apply_thumbnail_overlay`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success && data.thumbnail_url) {
+                    const mainImg = document.getElementById(`main-thumb-${currentStudioVideoId}`);
+                    if (mainImg) mainImg.src = data.thumbnail_url + '?t=' + Date.now();
+                    closeThumbnailStudio();
+                }
+            } catch (e) { alert('Error: ' + e.message); }
+        }
+
+        // --- Audio Studio ---
+        let currentAudioVideoId = null;
+
+        async function openAudioStudio(videoId) {
+            currentAudioVideoId = videoId;
+            const modal = document.getElementById('audio-studio-modal');
+            const select = document.getElementById('audio-track-select');
+            modal.style.display = 'flex';
+
+            try {
+                const res = await fetch('/api/audio/tracks');
+                const data = await res.json();
+                if (data && data.tracks) {
+                    select.innerHTML = '';
+                    data.tracks.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t.filename;
+                        opt.textContent = t.title;
+                        opt.dataset.path = t.path;
+                        select.appendChild(opt);
+                    });
+                    updateMusicPreview();
+                }
+            } catch (e) {}
+        }
+
+        function updateMusicPreview() {
+            const select = document.getElementById('audio-track-select');
+            const player = document.getElementById('audio-preview-player');
+            const opt = select.options[select.selectedIndex];
+            if (opt && opt.dataset.path) player.src = opt.dataset.path;
+        }
+
+        function closeAudioStudio() {
+            const player = document.getElementById('audio-preview-player');
+            if (player) player.pause();
+            document.getElementById('audio-studio-modal').style.display = 'none';
+        }
+
+        async function applyAudioEnhancement() {
+            if (!currentAudioVideoId) return;
+            const btn = document.getElementById('btn-enhance-speech');
+            btn.disabled = true;
+            btn.textContent = '⚡ Enhancing Audio...';
+            try {
+                const res = await fetch(`/api/videos/${currentAudioVideoId}/enhance_audio`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ Audio cleaned & normalized!');
+                    closeAudioStudio();
+                    window.location.reload();
+                } else { alert('Error: ' + (data.error || 'Failed')); btn.disabled = false; }
+            } catch (e) { alert('Error: ' + e.message); btn.disabled = false; }
+        }
+
+        async function applyMusicMix() {
+            if (!currentAudioVideoId) return;
+            const btn = document.getElementById('btn-mix-music');
+            btn.disabled = true;
+            btn.textContent = '🎵 Mixing on M4 GPU...';
+
+            const formData = new FormData();
+            formData.append('music_track', document.getElementById('audio-track-select').value);
+            formData.append('music_volume', parseFloat(document.getElementById('audio-vol-slider').value) / 100.0);
+            formData.append('auto_ducking', document.getElementById('audio-ducking-cb').checked);
+
+            try {
+                const res = await fetch(`/api/videos/${currentAudioVideoId}/mix_music`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ Background music mixed with auto-ducking!');
+                    closeAudioStudio();
+                    window.location.reload();
+                } else { alert('Error: ' + (data.error || 'Failed')); btn.disabled = false; }
+            } catch (e) { alert('Error: ' + e.message); btn.disabled = false; }
+        }
+
+        // --- Color Grade Studio ---
+        let currentColorVideoId = null;
         function openColorGradeStudio(videoId) {
             currentColorVideoId = videoId;
             document.getElementById('color-grade-modal').style.display = 'flex';
         }
-
-        function closeColorGradeStudio() {
-            document.getElementById('color-grade-modal').style.display = 'none';
-        }
+        function closeColorGradeStudio() { document.getElementById('color-grade-modal').style.display = 'none'; }
 
         async function applyColorGrade() {
             if (!currentColorVideoId) return;
             const btn = document.getElementById('btn-apply-color');
             const selectedLut = document.querySelector('input[name="lut_choice"]:checked').value;
-
             btn.disabled = true;
-            btn.textContent = '🎬 Rendering Cinematic Grade on M4 GPU...';
+            btn.textContent = '🎬 Rendering Grade...';
 
             const formData = new FormData();
             formData.append('preset', selectedLut);
 
             try {
-                const res = await fetch(`/api/videos/${currentColorVideoId}/apply_color_grade`, {
-                    method: 'POST',
-                    body: formData
-                });
+                const res = await fetch(`/api/videos/${currentColorVideoId}/apply_color_grade`, { method: 'POST', body: formData });
                 const data = await res.json();
                 if (data.success) {
-                    alert('✅ Cinematic color grading applied successfully!');
+                    alert('✅ Cinematic color grading applied!');
                     closeColorGradeStudio();
                     window.location.reload();
-                } else {
-                    alert('Error: ' + (data.error || 'Failed'));
-                    btn.disabled = false;
-                    btn.textContent = '🎬 Render Cinematic Grade';
-                }
-            } catch (e) {
-                alert('Error: ' + e.message);
-                btn.disabled = false;
-                btn.textContent = '🎬 Render Cinematic Grade';
-            }
+                } else { alert('Error: ' + (data.error || 'Failed')); btn.disabled = false; }
+            } catch (e) { alert('Error: ' + e.message); btn.disabled = false; }
         }
 
-        // --- 3. Competitor SEO Keyword Spy ---
+        // --- Competitor Keyword Spy ---
         let currentSpyVideoId = null;
         let lastSpyRecommendedTags = [];
 
-        function openKeywordSpy(videoId, initialQuery) {
+        function openKeywordSpy(videoId, query) {
             currentSpyVideoId = videoId;
-            const input = document.getElementById('spy-query-input');
-            input.value = initialQuery || '';
+            document.getElementById('spy-query-input').value = query || '';
             document.getElementById('keyword-spy-modal').style.display = 'flex';
             runKeywordSpySearch();
         }
-
-        function closeKeywordSpy() {
-            document.getElementById('keyword-spy-modal').style.display = 'none';
-        }
+        function closeKeywordSpy() { document.getElementById('keyword-spy-modal').style.display = 'none'; }
 
         async function runKeywordSpySearch() {
             if (!currentSpyVideoId) return;
             const box = document.getElementById('spy-results-box');
             const query = document.getElementById('spy-query-input').value;
-            box.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem;">🤖 Searching YouTube & analyzing top ranking competitor tags...</div>';
+            box.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem;">Searching YouTube competitor rankings...</div>';
 
             const formData = new FormData();
             formData.append('custom_query', query);
 
             try {
-                const res = await fetch(`/api/videos/${currentSpyVideoId}/spy_keywords`, {
-                    method: 'POST',
-                    body: formData
-                });
+                const res = await fetch(`/api/videos/${currentSpyVideoId}/spy_keywords`, { method: 'POST', body: formData });
                 const resData = await res.json();
                 if (resData.success && resData.data) {
                     const data = resData.data;
                     lastSpyRecommendedTags = data.recommended_tags || [];
-                    
                     let html = '';
                     if (data.winning_angle) {
-                        html += `<div style="background:rgba(56,189,248,0.1); border:1px solid var(--accent-blue); padding:10px; border-radius:6px; font-size:0.82rem; color:var(--text-color);">
-                            🎯 <strong>SEO Strategy:</strong> ${data.winning_angle}
-                        </div>`;
+                        html += `<div style="background:rgba(56,189,248,0.1); border:1px solid var(--accent-blue); padding:8px 12px; border-radius:6px; font-size:0.8rem;">🎯 <strong>SEO Insight:</strong> ${data.winning_angle}</div>`;
                     }
                     if (lastSpyRecommendedTags.length > 0) {
-                        html += `<div>
-                            <label style="font-size:0.82rem; font-weight:700; color:var(--accent-green);">🔥 Top Recommended Viral Tags:</label>
-                            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;">
-                                ${lastSpyRecommendedTags.map(t => `<span style="background:#1e293b; border:1px solid var(--accent-green); color:var(--accent-green); font-size:0.75rem; padding:2px 8px; border-radius:4px;">#${t}</span>`).join('')}
-                            </div>
-                        </div>`;
+                        html += `<div style="display:flex; flex-wrap:wrap; gap:4px;">${lastSpyRecommendedTags.map(t => `<span style="background:var(--bg-input); border:1px solid var(--accent-green); color:var(--accent-green); font-size:0.72rem; padding:2px 6px; border-radius:4px;">#${t}</span>`).join('')}</div>`;
                     }
-                    if (data.competitors && data.competitors.length > 0) {
-                        html += `<label style="font-size:0.82rem; font-weight:700; color:var(--text-muted); margin-top:6px;">🏆 Top Ranking Competitor Videos:</label>`;
+                    if (data.competitors) {
                         data.competitors.forEach(c => {
-                            html += `<div style="display:flex; gap:10px; background:#030712; padding:8px; border-radius:6px; border:1px solid var(--border-color); align-items:center;">
-                                <img src="${c.thumbnail}" style="width:80px; height:45px; object-fit:cover; border-radius:4px;">
-                                <div style="flex:1; overflow:hidden;">
-                                    <div style="font-size:0.82rem; font-weight:700; color:var(--text-color); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${c.title}</div>
-                                    <div style="font-size:0.75rem; color:var(--text-muted);">${c.channel} • 👁️ ${c.views.toLocaleString()} views • 👍 ${c.likes.toLocaleString()} likes</div>
-                                </div>
+                            html += `<div style="display:flex; gap:8px; background:var(--bg-input); padding:6px 10px; border-radius:6px; align-items:center;">
+                                <img src="${c.thumbnail}" style="width:70px; height:40px; object-fit:cover; border-radius:4px;">
+                                <div style="flex:1; overflow:hidden;"><div style="font-size:0.8rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${c.title}</div><div style="font-size:0.72rem; color:var(--text-muted);">${c.channel} • 👁️ ${c.views.toLocaleString()} views</div></div>
                             </div>`;
                         });
                     }
                     box.innerHTML = html;
-                } else {
-                    box.innerHTML = '<div style="color:var(--accent-red); font-size:0.85rem;">No competitor data found.</div>';
                 }
-            } catch (e) {
-                box.innerHTML = `<div style="color:var(--accent-red); font-size:0.85rem;">Error: ${e.message}</div>`;
-            }
+            } catch (e) { box.innerHTML = `<div style="color:var(--accent-red); font-size:0.85rem;">Error: ${e.message}</div>`; }
         }
 
         function injectRecommendedTags() {
-            if (!currentSpyVideoId || lastSpyRecommendedTags.length === 0) {
-                alert('No recommended tags available to inject.');
-                return;
-            }
+            if (!currentSpyVideoId || lastSpyRecommendedTags.length === 0) return;
             const input = document.getElementById(`input-tags-${currentSpyVideoId}`);
             if (input) {
                 const existing = input.value ? input.value.split(',').map(s => s.trim()) : [];
-                const merged = Array.from(new Set([...existing, ...lastSpyRecommendedTags])).join(', ');
-                input.value = merged;
-                alert('✅ Injected high-ranking competitor tags into video metadata!');
+                input.value = Array.from(new Set([...existing, ...lastSpyRecommendedTags])).join(', ');
+                alert('✅ Injected high-ranking tags!');
                 closeKeywordSpy();
             }
         }
 
-        // --- 4. Community Teaser GIF & Poll ---
+        // --- Community Teaser Studio ---
         let currentCommunityVideoId = null;
-
         async function openCommunityStudio(videoId) {
             currentCommunityVideoId = videoId;
             const modal = document.getElementById('community-modal');
             const box = document.getElementById('community-content-box');
             modal.style.display = 'flex';
-            box.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem;">🎬 Generating 3-second animated teaser GIF and AI Community Poll...</div>';
+            box.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem;">Generating 3s animated teaser GIF & AI Poll...</div>';
 
             try {
                 const res = await fetch(`/api/videos/${videoId}/generate_community`, { method: 'POST' });
@@ -1633,258 +1828,17 @@
                     const c = data.data;
                     let html = '';
                     if (c.gif_url) {
-                        html += `<div style="text-align:center; background:#030712; padding:8px; border-radius:8px; border:1px solid var(--border-color);">
-                            <img src="${c.gif_url}" style="max-height:180px; width:auto; border-radius:4px;">
-                            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">🔥 High-Energy 3s Teaser GIF</div>
-                        </div>`;
+                        html += `<div style="text-align:center; background:#000; padding:8px; border-radius:8px;"><img src="${c.gif_url}" style="max-height:160px; border-radius:4px;"><div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">🔥 3s Teaser GIF</div></div>`;
                     }
-                    html += `<div class="form-group">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <label style="color:var(--accent-purple); font-weight:700;">📝 Community Tab Post Text:</label>
-                            <button type="button" class="btn btn-retry" onclick="copyText('community-post-copy')" style="padding:2px 8px; font-size:0.72rem;">📋 Copy</button>
-                        </div>
-                        <textarea id="community-post-copy" class="form-textarea" style="height:70px; font-size:0.82rem;">${c.community_post_text || ''}</textarea>
-                    </div>`;
-
+                    html += `<div><div class="form-label">Community Post Text:</div><textarea id="comm-copy" class="form-textarea" style="height:60px; font-size:0.82rem;">${c.community_post_text || ''}</textarea></div>`;
                     if (c.poll_question) {
-                        html += `<div style="background:#030712; padding:10px; border-radius:6px; border:1px solid var(--border-color);">
-                            <div style="font-size:0.82rem; font-weight:700; color:var(--accent-blue); margin-bottom:4px;">📊 Interactive Poll: "${c.poll_question}"</div>
-                            ${(c.poll_options || []).map((opt, i) => `<div style="font-size:0.78rem; color:var(--text-muted); margin-left:12px;">• ${opt}</div>`).join('')}
-                        </div>`;
+                        html += `<div style="background:var(--bg-input); padding:10px; border-radius:6px;"><div style="font-weight:700; color:var(--accent-blue); font-size:0.82rem;">📊 Poll: "${c.poll_question}"</div>${(c.poll_options||[]).map(o => `<div style="font-size:0.76rem; color:var(--text-muted); margin-left:8px;">• ${o}</div>`).join('')}</div>`;
                     }
                     box.innerHTML = html;
-                } else {
-                    box.innerHTML = '<div style="color:var(--accent-red); font-size:0.85rem;">Failed to generate community assets.</div>';
                 }
-            } catch (e) {
-                box.innerHTML = `<div style="color:var(--accent-red); font-size:0.85rem;">Error: ${e.message}</div>`;
-            }
+            } catch (e) { box.innerHTML = `<div style="color:var(--accent-red);">Error: ${e.message}</div>`; }
         }
-
-        function closeCommunityStudio() {
-            document.getElementById('community-modal').style.display = 'none';
-        }
-
-        function copyText(elemId) {
-            const elem = document.getElementById(elemId);
-            if (elem) {
-                elem.select();
-                navigator.clipboard.writeText(elem.value);
-                alert('📋 Copied to clipboard!');
-            }
-        }
-
-        async function triggerVisionAI(videoId) {
-            const btn = document.getElementById(`ai-btn-${videoId}`);
-            const progressBox = document.getElementById(`ai-progress-${videoId}`);
-            const statusText = document.getElementById(`ai-status-text-${videoId}`);
-            const card = document.getElementById(`card-${videoId}`);
-            const contextInput = document.getElementById(`context-input-${videoId}`);
-
-            btn.disabled = true;
-            btn.style.opacity = '0.6';
-            progressBox.style.display = 'block';
-            card.style.borderColor = 'var(--accent-purple)';
-            card.style.boxShadow = '0 0 18px rgba(192, 132, 252, 0.4)';
-
-            statusText.textContent = '📸 [1/3] Extracting keyframe images for Vision Model...';
-
-            const timer1 = setTimeout(() => {
-                statusText.textContent = '🤖 [2/3] Gemini Vision AI analyzing scene & context...';
-            }, 1200);
-
-            const timer2 = setTimeout(() => {
-                statusText.textContent = '✨ [3/3] Generating SEO Title, Description & Tags...';
-            }, 3000);
-
-            const formData = new FormData();
-            formData.append('user_context', contextInput.value);
-
-            try {
-                const response = await fetch(`/api/videos/${videoId}/regenerate_ai`, {
-                    method: 'POST',
-                    headers: { 'Accept': 'application/json' },
-                    body: formData
-                });
-
-                clearTimeout(timer1);
-                clearTimeout(timer2);
-
-                const data = await response.json();
-                if (data && data.metadata) {
-                    statusText.textContent = '✅ Vision AI Analysis Complete!';
-                    
-                    if (data.metadata.title) {
-                        document.getElementById(`input-title-${videoId}`).value = data.metadata.title;
-                        document.getElementById(`title-display-${videoId}`).textContent = data.metadata.title;
-                    }
-                    if (data.metadata.description) {
-                        document.getElementById(`input-desc-${videoId}`).value = data.metadata.description;
-                    }
-                    if (data.metadata.tags) {
-                        const tagsStr = Array.isArray(data.metadata.tags) ? data.metadata.tags.join(', ') : data.metadata.tags;
-                        document.getElementById(`input-tags-${videoId}`).value = tagsStr;
-                    }
-                    if (data.metadata.category) {
-                        document.getElementById(`input-cat-${videoId}`).value = data.metadata.category;
-                    }
-
-                    document.getElementById(`ai-pill-${videoId}`).textContent = '🤖 AI: 95%';
-                    document.getElementById(`badge-${videoId}`).textContent = 'AWAITING_APPROVAL';
-                    document.getElementById(`badge-${videoId}`).className = 'badge-status badge-AWAITING_APPROVAL';
-
-                    card.style.borderColor = 'var(--accent-green)';
-                    card.style.boxShadow = '0 0 18px rgba(74, 222, 128, 0.4)';
-
-                    setTimeout(() => {
-                        progressBox.style.display = 'none';
-                        btn.disabled = false;
-                        btn.style.opacity = '1';
-                        btn.textContent = '✨ Re-Generate with Vision AI';
-                    }, 1200);
-                } else {
-                    window.location.reload();
-                }
-            } catch (err) {
-                clearTimeout(timer1);
-                clearTimeout(timer2);
-                statusText.textContent = '⚠️ AI note: Reloading metadata...';
-                setTimeout(() => window.location.reload(), 1000);
-            }
-        }
-
-        async function startMergeProcess() {
-            const checkedBoxes = document.querySelectorAll('.video-select-cb:checked');
-            if (checkedBoxes.length < 2) return;
-
-            const modal = document.getElementById('merge-modal');
-            const progressFill = document.getElementById('progress-fill');
-            const statusMsg = document.getElementById('merge-status-msg');
-            const pctLabel = document.getElementById('merge-pct');
-
-            modal.style.display = 'flex';
-            progressFill.style.width = '5%';
-            pctLabel.textContent = '5%';
-            statusMsg.textContent = 'Initializing video merger...';
-
-            const formData = new FormData();
-            checkedBoxes.forEach(cb => formData.append('video_ids', cb.value));
-
-            // Poll progress in background
-            const pollInterval = setInterval(async () => {
-                try {
-                    const res = await fetch('/api/videos/merge/progress');
-                    const data = await res.json();
-                    if (data && data.percent !== undefined) {
-                        progressFill.style.width = data.percent + '%';
-                        pctLabel.textContent = data.percent + '%';
-                        if (data.message) statusMsg.textContent = data.message;
-                    }
-                } catch (e) {}
-            }, 300);
-
-            try {
-                const response = await fetch('/api/videos/merge', {
-                    method: 'POST',
-                    body: formData
-                });
-                clearInterval(pollInterval);
-                progressFill.style.width = '100%';
-                pctLabel.textContent = '100%';
-                statusMsg.textContent = 'Merge complete! Loading merged video card...';
-                setTimeout(() => {
-                    window.location.reload();
-                }, 600);
-            } catch (err) {
-                clearInterval(pollInterval);
-                alert('Error merging videos: ' + err.message);
-                modal.style.display = 'none';
-            }
-        }
-
-        // Live Activity Title Bar Poller & Auto-Transition on Upload Completion
-        let activeUploads = new Set();
-        let isReloading = false;
-
-        async function pollSystemActivity() {
-            if (isReloading) return;
-            try {
-                const res = await fetch('/api/engine/activity');
-                const data = await res.json();
-                if (data) {
-                    const bar = document.getElementById('activity-title-bar');
-                    const label = document.getElementById('activity-label');
-                    const icon = document.getElementById('activity-icon');
-                    const progressTrack = document.getElementById('activity-progress-container');
-                    const progressBar = document.getElementById('activity-progress-bar');
-                    const timeLabel = document.getElementById('activity-time');
-
-                    label.textContent = data.label || 'System Idle';
-                    timeLabel.textContent = data.updated_at ? `Updated: ${data.updated_at}` : 'Active';
-
-                    if (data.active) {
-                        bar.classList.add('active');
-                        if (data.task === 'VISION_AI') icon.textContent = '🤖';
-                        else if (data.task === 'MERGING') icon.textContent = '🎬';
-                        else if (data.task === 'ANALYZING') icon.textContent = '📸';
-                        else if (data.task === 'UPLOADING') icon.textContent = '🚀';
-                        else icon.textContent = '⚡';
-
-                        if (data.progress > 0) {
-                            progressTrack.style.display = 'block';
-                            progressBar.style.width = data.progress + '%';
-                        } else {
-                            progressTrack.style.display = 'none';
-                        }
-                    } else {
-                        bar.classList.remove('active');
-                        icon.textContent = '🟢';
-                        progressTrack.style.display = 'none';
-                        
-                        // If we had an active upload and now engine is idle, refresh to show in Uploaded tab
-                        if (activeUploads.size > 0 && !isReloading) {
-                            isReloading = true;
-                            activeUploads.clear();
-                            window.location.reload();
-                            return;
-                        }
-                    }
-
-                    // Dynamically update active in-card upload progress bars
-                    if (data.video_progress) {
-                        for (const [vid, vp] of Object.entries(data.video_progress)) {
-                            const upBox = document.getElementById(`upload-box-${vid}`);
-                            const upFill = document.getElementById(`upload-fill-${vid}`);
-                            const upPct = document.getElementById(`upload-pct-${vid}`);
-                            
-                            if (vp.task === 'UPLOADING') {
-                                activeUploads.add(vid);
-                                if (upBox && upFill && upPct) {
-                                    upBox.style.display = 'block';
-                                    upFill.style.width = vp.progress + '%';
-                                    upPct.textContent = vp.progress + '%';
-                                }
-                            } else if (vp.task === 'UPLOADED' || vp.progress >= 100) {
-                                if (upBox && upFill && upPct) {
-                                    upBox.style.display = 'block';
-                                    upFill.style.width = '100%';
-                                    upFill.style.background = 'linear-gradient(90deg, #22c55e, #10b981)';
-                                    upPct.textContent = '100% ✅';
-                                }
-                                if (activeUploads.has(vid) && !isReloading) {
-                                    isReloading = true;
-                                    activeUploads.delete(vid);
-                                    setTimeout(() => window.location.reload(), 1400);
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (e) {}
-        }
-        setInterval(pollSystemActivity, 1000);
-        pollSystemActivity();
+        function closeCommunityStudio() { document.getElementById('community-modal').style.display = 'none'; }
     </script>
 </body>
 </html>
