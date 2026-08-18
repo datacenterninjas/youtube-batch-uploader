@@ -80,12 +80,28 @@ def generate_metadata_with_vision(video_id, frames, user_context=None):
             "}"
         )
 
-        response = client.models.generate_content(
-            model='gemini-3.6-flash',
-            contents=[*images, prompt]
-        )
+        models_to_try = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-flash-latest']
+        response = None
+        for m in models_to_try:
+            try:
+                response = client.models.generate_content(
+                    model=m,
+                    contents=[*images, prompt]
+                )
+                if response and response.text:
+                    break
+            except Exception as me:
+                print(f"⚠️ Vision AI model {m} note: {me}")
+                continue
         
-        text = response.text or ""
+        if not response or not response.text:
+            return None
+
+        text = response.text.strip()
+        # Strip markdown ```json ``` wraps if present
+        text = re.sub(r'^```json\s*', '', text, flags=re.MULTILINE)
+        text = re.sub(r'\s*```$', '', text, flags=re.MULTILINE)
+        
         json_match = re.search(r'\{.*\}', text, re.DOTALL)
         if json_match:
             data = json.loads(json_match.group(0))

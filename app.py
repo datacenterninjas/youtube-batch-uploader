@@ -385,6 +385,7 @@ def generate_captions(video_id: int):
     srt_file = captions_generator.generate_srt_captions(video_id, video["file_path"])
     return JSONResponse({"success": bool(srt_file), "srt_file": srt_file})
 
+@app.post("/api/videos/{video_id}/analyze_ai")
 @app.post("/api/videos/{video_id}/regenerate_ai")
 def regenerate_ai_metadata(
     video_id: int,
@@ -393,12 +394,15 @@ def regenerate_ai_metadata(
 ):
     """Runs Gemini Vision AI metadata generation incorporating creator context notes."""
     video = database.get_video_by_id(video_id)
-    metadata = {}
-    if video:
-        with database.get_connection() as conn:
-            conn.cursor().execute("UPDATE videos SET user_context = ? WHERE id = ?", (user_context, video_id))
-            conn.commit()
-            
+    if not video:
+        return JSONResponse({"success": False, "error": "Video not found"}, status_code=404)
+        
+    try:
+        if user_context is not None:
+            with database.get_connection() as conn:
+                conn.cursor().execute("UPDATE videos SET user_context = ? WHERE id = ?", (user_context, video_id))
+                conn.commit()
+                
         metadata = metadata_generator.generate_metadata(
             video_id, 
             video['filename'], 
@@ -406,12 +410,9 @@ def regenerate_ai_metadata(
             user_context=user_context
         )
         database.update_video_status(video_id, 'AWAITING_APPROVAL')
-
-    accept_header = request.headers.get("accept", "")
-    if "application/json" in accept_header or request.headers.get("x-requested-with") == "XMLHttpRequest":
         return JSONResponse({"success": True, "metadata": metadata, "video_id": video_id})
-        
-    return RedirectResponse(url="/", status_code=303)
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
 @app.post("/api/uploader/restart")
 def restart_uploader_engine():

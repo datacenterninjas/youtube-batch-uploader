@@ -1483,7 +1483,17 @@
 
                 const res = await fetch(`/api/videos/${videoId}/analyze_ai`, { method: 'POST', body: formData });
                 const data = await res.json();
-                if (data.success) {
+                if (data.success && data.metadata) {
+                    const m = data.metadata;
+                    const titleInput = document.getElementById(`input-title-${videoId}`);
+                    const descInput = document.getElementById(`input-desc-${videoId}`);
+                    const tagsInput = document.getElementById(`input-tags-${videoId}`);
+                    if (titleInput && m.title) titleInput.value = m.title;
+                    if (descInput && m.description) descInput.value = m.description;
+                    if (tagsInput && m.tags) tagsInput.value = Array.isArray(m.tags) ? m.tags.join(', ') : m.tags;
+                    btn.disabled = false;
+                    btn.textContent = '✨ Vision AI Rewrite';
+                    alert('✨ Vision AI rewrite completed! Metadata updated.');
                     window.location.reload();
                 } else {
                     alert('AI Error: ' + (data.error || 'Failed'));
