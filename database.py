@@ -29,6 +29,7 @@ def init_db():
             frame_rate REAL,
             privacy TEXT DEFAULT 'unlisted',
             status TEXT DEFAULT 'DISCOVERED',
+            user_context TEXT,
             title TEXT,
             description TEXT,
             tags TEXT,
@@ -47,6 +48,12 @@ def init_db():
             archived_at TIMESTAMP
         )
         """)
+        
+        # Migration for user_context if existing database
+        try:
+            cursor.execute("ALTER TABLE videos ADD COLUMN user_context TEXT;")
+        except sqlite3.OperationalError:
+            pass # column already exists
         
         # Upload attempts table
         cursor.execute("""
@@ -205,3 +212,12 @@ def get_db_stats():
         cursor.execute("SELECT status, COUNT(*) as count FROM videos GROUP BY status")
         rows = cursor.fetchall()
         return {r["status"]: r["count"] for r in rows}
+
+def delete_video(video_id):
+    """Deletes a video record and its associated attempts and analysis from the database."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM analysis WHERE video_id = ?", (video_id,))
+        cursor.execute("DELETE FROM upload_attempts WHERE video_id = ?", (video_id,))
+        cursor.execute("DELETE FROM videos WHERE id = ?", (video_id,))
+        conn.commit()

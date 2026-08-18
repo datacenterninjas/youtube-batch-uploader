@@ -31,4 +31,7 @@ youtube_publisher.db-wal
 youtube_publisher.db-shm
 processing/
 
-
+# --- Build & Binary Artifacts ---
+build/
+dist/
+*.spec

@@ -77,6 +77,8 @@ def extract_representative_frames(video_path, video_id, num_frames=None):
 
 def analyze_video(video_id, video_path):
     """Main analysis pipeline for Sprint 3 (Metadata & Auto-Orientation Keyframe Extraction)."""
+    import activity_tracker
+    activity_tracker.set_activity("ANALYZING", f"📸 Extracting representative keyframes for '{Path(video_path).name}'...", progress=35)
     database.update_video_status(video_id, 'ANALYZING')
     
     try:
@@ -93,9 +95,11 @@ def analyze_video(video_id, video_path):
         frames = extract_representative_frames(video_path, video_id)
         
         database.update_video_status(video_id, 'ANALYZED')
+        activity_tracker.clear_activity()
         print(f"[ANALYSIS SUCCESS] Video {video_id}: {meta['resolution']}, {meta['duration']}s, {len(frames)} keyframes extracted.")
         return meta, frames
     except Exception as e:
+        activity_tracker.clear_activity()
         err_msg = f"Analysis failed for video {video_id}: {str(e)}"
         database.update_video_status(video_id, 'ANALYSIS_FAILED', error_message=err_msg)
         print(f"[ANALYSIS ERROR] {err_msg}")

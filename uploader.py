@@ -126,6 +126,7 @@ def wait_for_file_to_stabilize(filepath):
             time.sleep(5)
 
 def upload_video(youtube, filepath, video_row):
+    video_id = video_row.get("id")
     title = video_row.get("title") or Path(filepath).stem
     description = video_row.get("description") or "Uploaded via YouTube Auto Publisher"
     tags_str = video_row.get("tags") or "automated"
@@ -144,12 +145,18 @@ def upload_video(youtube, filepath, video_row):
         }
     }
     
+    # 2MB chunks for smooth, real-time progress callbacks
+    chunk_size = 2 * 1024 * 1024
+    media = MediaFileUpload(str(filepath), chunksize=chunk_size, resumable=True)
+    
     insert_request = youtube.videos().insert(
         part=",".join(body.keys()),
         body=body,
-        media_body=MediaFileUpload(filepath, chunksize=-1, resumable=True)
+        media_body=media
     )
-    print(f"Starting YouTube upload for '{title}' ({privacy_status})...")
+    print(f"🚀 Starting YouTube upload for '{title}' ({privacy_status})...")
+    import activity_tracker
+    activity_tracker.update_video_progress(video_id, "UPLOADING", f"🚀 Uploading '{title}' to YouTube (0%)...", 0)
     
     retries = 0
     max_retries = config.get_setting("max_upload_retries", 5)
@@ -157,7 +164,13 @@ def upload_video(youtube, filepath, video_row):
     
     while response is None:
         try:
-            _, response = insert_request.next_chunk()
+            status, response = insert_request.next_chunk()
+            if status:
+                progress = status.progress() # float between 0.0 and 1.0
+                pct = int(progress * 100)
+                msg = f"🚀 Uploading '{title}' to YouTube ({pct}% complete)..."
+                print(f"[UPLOAD PROGRESS] Video {video_id}: {pct}%")
+                activity_tracker.update_video_progress(video_id, "UPLOADING", msg, pct)
         except (HttpError, ConnectionResetError, socket.timeout, httplib2.ServerNotFoundError) as e:
             if isinstance(e, HttpError) and e.resp.status == 403 and "quotaExceeded" in str(e):
                 raise e
@@ -168,6 +181,7 @@ def upload_video(youtube, filepath, video_row):
             time.sleep(sleep_time)
             retries += 1
             
+    activity_tracker.update_video_progress(video_id, "UPLOADED", f"✅ Successfully uploaded '{title}' to YouTube!", 100, active=False)
     return response
 
 def scan_for_videos():
@@ -186,10 +200,13 @@ def scan_for_videos():
     queue.sort(key=lambda item: item.name)
     return queue
 
-def main_loop(youtube_client):
+def main_loop(youtube_client, stop_event=None, wake_event=None):
     database.init_db()
     
     while True:
+        if stop_event and stop_event.is_set():
+            break
+            
         cfg = config.load_config()
         max_quota = cfg.get("daily_upload_limit", 6)
         quota_data = load_quota()
@@ -199,13 +216,20 @@ def main_loop(youtube_client):
             sleep_seconds = get_seconds_until_midnight()
             hours = sleep_seconds / 3600
             print(f"Daily quota reached ({count}/{max_quota}). Sleeping for {hours:.2f} hours until midnight...")
-            time.sleep(sleep_seconds)
+            if wake_event:
+                wake_event.wait(timeout=sleep_seconds)
+                wake_event.clear()
+            else:
+                time.sleep(sleep_seconds)
             continue
             
         queue = scan_for_videos()
         if not queue:
-            print("Queue is empty. Sleeping for 60 seconds...")
-            time.sleep(60)
+            if wake_event:
+                wake_event.wait(timeout=5)
+                wake_event.clear()
+            else:
+                time.sleep(5)
             continue
             
         file_path = queue[0]
@@ -228,8 +252,11 @@ def main_loop(youtube_client):
         # If already analyzed and awaiting approval, don't re-analyze
         if current_status == "AWAITING_APPROVAL":
             if approval_mode == "review":
-                print(f"⏳ Video #{video_id} ('{file_path.name}') is AWAITING_APPROVAL in Web Dashboard...")
-                time.sleep(15)
+                if wake_event:
+                    wake_event.wait(timeout=5)
+                    wake_event.clear()
+                else:
+                    time.sleep(5)
                 continue
 
         # Run analysis pipeline only if video is newly discovered
@@ -266,6 +293,27 @@ def main_loop(youtube_client):
             continue
 
         # 6. Upload
+        if not os.path.exists(file_path):
+            found = False
+            candidates = [
+                Path(os.path.expanduser(config.get_setting("return_directory", "~/Downloads"))) / file_path.name,
+                Path("uploaded_archive") / file_path.name,
+                Path("failed_to_upload") / file_path.name,
+            ]
+            for candidate in candidates:
+                if candidate.exists():
+                    file_path.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(candidate), str(file_path))
+                    found = True
+                    break
+            if not found:
+                err_msg = f"Video file '{file_path.name}' is not in staging. Drag and drop it onto the Web UI to upload."
+                database.update_video_status(video_id, 'UPLOAD_FAILED', error_message=err_msg)
+                print(f"⚠️ {err_msg}")
+                continue
+
+        import activity_tracker
+        activity_tracker.set_activity("UPLOADING", f"🚀 Uploading '{original_title}' to YouTube...", progress=75)
         database.update_video_status(video_id, 'UPLOADING')
         database.increment_upload_attempts(video_id)
         current_attempt = (video_record.get('upload_attempts') or 0) + 1
@@ -281,8 +329,15 @@ def main_loop(youtube_client):
             log_success(f"Successfully uploaded {original_title} (YouTube ID: {yt_id}). Moving to archive.")
             database.log_attempt(video_id, current_attempt, 'SUCCESS')
             database.update_video_status(video_id, 'UPLOADED', youtube_video_id=yt_id, youtube_url=yt_url)
+            activity_tracker.clear_activity()
             
-            shutil.move(str(file_path), os.path.join("uploaded_archive", file_path.name))
+            return_dir = os.path.expanduser(config.get_setting("return_directory", "~/Downloads"))
+            os.makedirs(return_dir, exist_ok=True)
+            dest_path = os.path.join(return_dir, file_path.name)
+            if str(file_path) != str(dest_path):
+                if os.path.exists(dest_path):
+                    os.remove(dest_path)
+                shutil.move(str(file_path), dest_path)
             database.update_video_status(video_id, 'ARCHIVED')
             
         except HttpError as e:
@@ -312,6 +367,179 @@ def main_loop(youtube_client):
                 shutil.move(str(file_path), os.path.join("failed_to_upload", file_path.name))
                 
         time.sleep(2)
+
+def process_single_video_upload(video_id):
+    """Directly uploads a single video immediately on demand in a worker thread."""
+    database.init_db()
+    video_record = database.get_video_by_id(video_id)
+    if not video_record:
+        print(f"⚠️ Video #{video_id} not found.")
+        return False
+        
+    original_title = video_record.get('title') or video_record.get('filename')
+    file_path = Path(video_record['file_path'])
+    
+    # Locate candidate files if missing
+    if not file_path.exists():
+        candidates = [
+            Path(os.path.expanduser(config.get_setting("return_directory", "~/Downloads"))) / file_path.name,
+            Path("videos_to_upload/Unlisted") / file_path.name,
+            Path("videos_to_upload/Public") / file_path.name,
+            Path("videos_to_upload/Private") / file_path.name,
+            Path("uploaded_archive") / file_path.name,
+            Path("failed_to_upload") / file_path.name,
+        ]
+        for c in candidates:
+            if c.exists():
+                file_path.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(c), str(file_path))
+                break
+
+    if not file_path.exists():
+        err_msg = f"Video file '{file_path.name}' not found on disk."
+        database.update_video_status(video_id, 'UPLOAD_FAILED', error_message=err_msg)
+        print(f"⚠️ {err_msg}")
+        return False
+
+    database.update_video_status(video_id, 'UPLOADING')
+    database.increment_upload_attempts(video_id)
+    current_attempt = (video_record.get('upload_attempts') or 0) + 1
+    
+    import activity_tracker
+    import metadata_generator
+    import thumbnail_analyzer
+    import analyzer
+    import captions_generator
+    import playlist_manager
+
+    # Step 1: Ensure Video Metadata (Title, Description, Tags, Chapters) is generated with AI
+    if not video_record.get('title') or not video_record.get('description') or video_record.get('title') == video_record.get('filename'):
+        activity_tracker.update_video_progress(video_id, "VISION_AI", f"🤖 Generating AI Title, Description & Chapters...", 10)
+        try:
+            metadata_generator.generate_metadata(
+                video_id, 
+                file_path.name, 
+                video_record.get('privacy') or 'unlisted', 
+                user_context=video_record.get('user_context')
+            )
+            video_record = database.get_video_by_id(video_id)
+        except Exception as e:
+            print(f"⚠️ Metadata generation note: {e}")
+
+    original_title = video_record.get('title') or file_path.name
+
+    # Step 2: Ensure Local Preview & Best Thumbnail Exist
+    best_thumb_path = Path(f"processing/thumbnails/{video_id}/best_thumb.jpg")
+    if not best_thumb_path.exists():
+        try:
+            analyzer.analyze_video(video_id, str(file_path))
+            thumbnail_analyzer.select_best_thumbnails(video_id)
+        except Exception as e:
+            print(f"⚠️ Thumbnail extraction note: {e}")
+
+    # Step 3: Ensure Subtitles / Captions (.SRT) are generated from audio
+    srt_path = Path(f"processing/captions/{video_id}.srt")
+    if not srt_path.exists() and config.get_setting("transcription_enabled", True):
+        activity_tracker.update_video_progress(video_id, "ANALYZING", f"🎙️ Generating Subtitles & Captions...", 20)
+        try:
+            captions_generator.generate_srt_captions(video_id, str(file_path))
+        except Exception as e:
+            print(f"⚠️ Subtitles note: {e}")
+
+    activity_tracker.update_video_progress(video_id, "UPLOADING", f"🚀 Uploading '{original_title}' to YouTube (0%)...", 25)
+    
+    try:
+        youtube_client = authenticate()
+        response = upload_video(youtube_client, str(file_path), video_record)
+        yt_id = response.get("id") if response else None
+        yt_url = f"https://youtu.be/{yt_id}" if yt_id else None
+        
+        # 1. Custom Thumbnail Upload
+        thumb_candidates = [
+            Path(f"processing/custom_thumbnails/{video_id}.jpg"),
+            Path(f"processing/thumbnails/{video_id}/best_thumb.jpg")
+        ]
+        for tc in thumb_candidates:
+            if tc.exists() and yt_id:
+                try:
+                    from googleapiclient.http import MediaFileUpload
+                    media_thumb = MediaFileUpload(str(tc), mimetype="image/jpeg", resumable=True)
+                    youtube_client.thumbnails().set(videoId=yt_id, media_body=media_thumb).execute()
+                    print(f"🎨 Custom thumbnail uploaded successfully for {yt_id}!")
+                    break
+                except Exception as e:
+                    print(f"ℹ️ Custom thumbnail note (requires phone verification on channel): {e}")
+                    break
+
+        # 2. Captions / Subtitles Upload
+        try:
+            import captions_generator
+            srt_path = Path(f"processing/captions/{video_id}.srt")
+            if srt_path.exists() and yt_id:
+                captions_generator.upload_captions_to_youtube(youtube_client, yt_id, str(srt_path))
+        except Exception as e:
+            print(f"ℹ️ Captions upload note: {e}")
+
+        # 3. Smart Playlist Assignment
+        try:
+            import playlist_manager
+            target_pl = video_record.get("playlist_id")
+            if not target_pl and yt_id:
+                playlists = playlist_manager.get_user_playlists(youtube_client)
+                match = playlist_manager.auto_match_playlist(original_title, video_record.get("tags", "").split(","), playlists)
+                if match:
+                    target_pl = match["id"]
+            if target_pl and yt_id:
+                playlist_manager.add_video_to_playlist(youtube_client, target_pl, yt_id)
+        except Exception as e:
+            print(f"ℹ️ Playlist assignment note: {e}")
+
+        # 4. Multilingual Localizations & Subtitle Upload (Spanish, Hindi, French, German, Japanese)
+        try:
+            import multilingual_manager
+            localizations, translated_srts = multilingual_manager.generate_and_save_multilingual_assets(
+                video_id, 
+                original_title, 
+                video_record.get('description') or ''
+            )
+            if localizations and yt_id:
+                multilingual_manager.upload_localizations_to_youtube(youtube_client, yt_id, localizations)
+            if translated_srts and yt_id:
+                multilingual_manager.upload_multilingual_captions(youtube_client, yt_id, translated_srts)
+        except Exception as e:
+            print(f"ℹ️ Multilingual localization note: {e}")
+
+        increment_quota()
+        log_success(f"Successfully uploaded {original_title} (YouTube ID: {yt_id}).")
+        database.update_video_status(video_id, 'UPLOADED', youtube_video_id=yt_id, youtube_url=yt_url)
+        activity_tracker.update_video_progress(video_id, "UPLOADED", f"✅ Successfully uploaded '{original_title}' (100%)!", 100, active=False)
+        
+        return_dir = Path(os.path.expanduser(config.get_setting("return_directory", "~/Downloads")))
+        return_dir.mkdir(parents=True, exist_ok=True)
+        dest_path = return_dir / file_path.name
+        if file_path != dest_path:
+            if dest_path.exists():
+                os.remove(dest_path)
+            shutil.move(str(file_path), dest_path)
+        database.update_video_status(video_id, 'UPLOADED', youtube_video_id=yt_id, youtube_url=yt_url)
+        
+        time.sleep(2.5)
+        activity_tracker.clear_activity(video_id)
+        return True
+    except HttpError as e:
+        err_msg = f"YouTube API Error {e.resp.status}: {str(e)}"
+        log_error(err_msg)
+        database.log_attempt(video_id, current_attempt, 'FAILED', error=err_msg)
+        database.update_video_status(video_id, 'UPLOAD_FAILED', error_message=err_msg)
+        activity_tracker.clear_activity(video_id)
+        return False
+    except Exception as e:
+        err_msg = f"Unexpected error during upload of {original_title}: {str(e)}"
+        log_error(err_msg)
+        database.log_attempt(video_id, current_attempt, 'FAILED', error=err_msg)
+        database.update_video_status(video_id, 'UPLOAD_FAILED', error_message=err_msg)
+        activity_tracker.clear_activity(video_id)
+        return False
 
 if __name__ == "__main__":
     enforce_single_instance()
