@@ -5,6 +5,7 @@ from pathlib import Path
 import database
 import config
 import activity_tracker
+import analyzer
 
 try:
     from PIL import Image
@@ -29,9 +30,13 @@ def generate_metadata_with_vision(video_id, frames, user_context=None):
     try:
         client = genai.Client(api_key=api_key)
         
-        # Load up to 4 representative keyframe images
+        # Pick the top 3 sharpest, highest-contrast frames for minimal payload and max clarity
+        best_frames = analyzer.get_sharpest_frames(frames, top_n=3)
+        if not best_frames:
+            best_frames = frames[:3]
+
         images = []
-        for frame_path in frames[:4]:
+        for frame_path in best_frames:
             if os.path.exists(frame_path):
                 images.append(Image.open(frame_path))
                 
